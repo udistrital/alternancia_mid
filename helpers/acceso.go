@@ -174,7 +174,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 			if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"vinculacion/?query=Activo:true,TerceroPrincipalId.Id:"+idScan, &respuesta_peticion_permisos); (err == nil) && (response == 200) {
 				for _, vinculacion := range respuesta_peticion_permisos {
 					idRol = vinculacion.TipoVinculacionId
-					if idRol == 292 || idRol == 294 || (idRol >= 296 && idRol <= 299) {
+					if idRol == 377 || idRol == 292 || idRol == 294 || (idRol >= 296 && idRol <= 299) {
 						permiso = true
 					}
 				}
