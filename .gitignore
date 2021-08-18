@@ -1,0 +1,8 @@
+lastupdate.tmp
+.vscode/
+alternancia_mid
+main
+.scannerwork/
+swagger/**
+!swagger/swagger.json
+!swagger/swagger.yml
