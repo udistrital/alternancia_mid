@@ -18,7 +18,7 @@ SINTOMAS_SERVICE=[servicio api sintomas]
 OIKOS_SERVICE=[servicio api oikos]
 ```
 
-### Ejecución del Proyecto
+### Ejecución del Proyecto 
 
 ```shell
 #1. Obtener el repositorio con Go
