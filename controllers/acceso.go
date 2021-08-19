@@ -27,7 +27,7 @@ func (c *AccesoController) URLMapping() {
 // @Param	sede		query 	int			true			"Id de la sede a consultar"
 // @Param	edificio	query 	int			false	""		"Id del edificio a consultar"
 // @Param	aula		query 	string		false	""		"Id del aula a consultar"
-// @Param	tipo		query 	string		false	""		"Tipo de escaneo (in/out)"
+// @Param	tipo		query 	string		true			"Tipo de escaneo (in/out)"
 // @Success 200 {object} models.Persona
 // @Failure 404	No found resource
 // @router /:idQr/:idScan/ [get]
