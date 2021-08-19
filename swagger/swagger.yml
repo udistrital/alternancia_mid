@@ -1,0 +1,105 @@
+swagger: "2.0"
+info:
+  title: beego Test API
+  description: beego has a very cool tools to autogenerate documents for your API
+  version: 1.0.0
+  termsOfService: http://beego.me/
+  contact:
+    email: astaxie@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+basePath: /v1
+paths:
+  /acceso/{idQr}/{idScan}/:
+    get:
+      tags:
+      - acceso
+      description: Consulta autorización de acceso para quien muestra el QR
+      operationId: AccesoController.GetAutorizacion
+      parameters:
+      - in: path
+        name: idQr
+        description: Id de terceros de quien solicita acceso
+        required: true
+        type: integer
+        format: int64
+      - in: path
+        name: idScan
+        description: Id de terceros de quien escanea
+        required: true
+        type: integer
+        format: int64
+      - in: query
+        name: sede
+        description: Id de la sede a consultar
+        required: true
+        type: integer
+        format: int64
+      - in: query
+        name: edificio
+        description: Id del edificio a consultar
+        type: integer
+        format: int64
+        default: "false"
+      - in: query
+        name: aula
+        description: Id del aula a consultar
+        type: string
+        default: "false"
+      - in: query
+        name: tipo
+        description: Tipo de escaneo (in/out)
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/models.Persona'
+        "404":
+          description: No found resource
+  /acceso/idEspacio/tipoQR:
+    get:
+      tags:
+      - acceso
+      description: Da el acceso al estudiante
+      operationId: AccesoController.GetAcceso
+      parameters:
+      - in: path
+        name: idEspacio
+        description: Id del salon al que se accede
+        required: true
+        type: integer
+        format: int64
+      - in: path
+        name: tipoQR
+        description: Determina si el qr escaneado es de entrada o salida (in/out)
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+        "404":
+          description: No found resource
+definitions:
+  models.Persona:
+    title: Persona
+    type: object
+    properties:
+      Acceso:
+        type: string
+      Causa:
+        type: string
+      Cupo:
+        type: integer
+        format: int64
+      Fecha:
+        type: string
+        format: datetime
+      Nombre:
+        type: string
+tags:
+- name: acceso
+  description: |
+    AccesoController operations for Acceso
