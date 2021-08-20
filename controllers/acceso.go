@@ -24,18 +24,18 @@ func (c *AccesoController) URLMapping() {
 // @Description Consulta autorización de acceso para quien muestra el QR
 // @Param	idQr		path 	int			true			"Id de terceros de quien solicita acceso"
 // @Param	idScan		path 	int			true			"Id de terceros de quien escanea"
+// @Param	tipo		path 	string		true			"Tipo de escaneo (in/out)"
 // @Param	sede		query 	int			true			"Id de la sede a consultar"
-// @Param	edificio	query 	int			false	""		"Id del edificio a consultar"
-// @Param	aula		query 	string		false	""		"Id del aula a consultar"
-// @Param	tipo		query 	string		true			"Tipo de escaneo (in/out)"
+// @Param	edificio	query 	int			""				"Id del edificio a consultar"
+// @Param	aula		query 	string		""				"Id del aula a consultar"
 // @Success 200 {object} models.Persona
 // @Failure 404	No found resource
-// @router /:idQr/:idScan/ [get]
+// @router /:idQr/:idScan/:tipo [get]
 func (c *AccesoController) GetAutorizacion() {
 	idQrStr := c.GetString(":idQr")
 	idScanStr := c.GetString(":idScan")
+	tipo := c.GetString(":tipo")
 	sede := c.GetString("sede")
-	tipo := c.GetString("tipo")
 	edificio := c.GetString("edificio")
 	aula := c.GetString("aula")
 

@@ -49,7 +49,7 @@
                 }
             }
         },
-        "/acceso/{idQr}/{idScan}/": {
+        "/acceso/{idQr}/{idScan}/{tipo}": {
             "get": {
                 "tags": [
                     "acceso"
@@ -74,6 +74,13 @@
                         "format": "int64"
                     },
                     {
+                        "in": "path",
+                        "name": "tipo",
+                        "description": "Tipo de escaneo (in/out)",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
                         "in": "query",
                         "name": "sede",
                         "description": "Id de la sede a consultar",
@@ -86,21 +93,12 @@
                         "name": "edificio",
                         "description": "Id del edificio a consultar",
                         "type": "integer",
-                        "format": "int64",
-                        "default": "false"
+                        "format": "int64"
                     },
                     {
                         "in": "query",
                         "name": "aula",
                         "description": "Id del aula a consultar",
-                        "type": "string",
-                        "default": "false"
-                    },
-                    {
-                        "in": "query",
-                        "name": "tipo",
-                        "description": "Tipo de escaneo (in/out)",
-                        "required": true,
                         "type": "string"
                     }
                 ],

@@ -22,7 +22,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 			panic(outputError)
 		}
 	}()
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"/info_complementaria_tercero/?limit=-1&query=tercero_id:"+idQr, &respuesta_peticion); (err == nil) && (response == 200) {
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?limit=-1&query=tercero_id:"+idQr, &respuesta_peticion); (err == nil) && (response == 200) {
 		if len(respuesta_peticion) != 0 {
 
 			//Declaracion de variables a usar
@@ -56,7 +56,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 
 			//Consulta de vacunacion
 			var respuesta_peticion_vacuna []models.InfoComplementariaTercero
-			if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"/info_complementaria_tercero/?query=tercero_id:"+idQr+",InfoComplementariaId:305", &respuesta_peticion_vacuna); (err == nil) && (response == 200) {
+			if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?query=tercero_id:"+idQr+",InfoComplementariaId:305", &respuesta_peticion_vacuna); (err == nil) && (response == 200) {
 				if len(respuesta_peticion_vacuna) != 0 {
 					layout := "2006-01-02T15:04:05.000Z"
 					var dato map[string]interface{}
