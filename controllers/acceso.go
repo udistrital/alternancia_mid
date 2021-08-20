@@ -90,13 +90,13 @@ func (c *AccesoController) GetAutorizacion() {
 // @Description Da el acceso al estudiante
 // @Param	idEspacio		path 	int			true			"Id del salon al que se accede"
 // @Param	tipoQR			path 	string		true			"Determina si el qr escaneado es de entrada o salida (in/out)"
-// @Success 200
+// @Success 200 {object} models.Persona
 // @Failure 404	No found resource
-// @router /idEspacio/tipoQR [get]
+// @router /:idEspacio/:tipoQR [get]
 func (c *AccesoController) GetIngreso() {
 
-	idEspacio := c.GetString("idEspacio")
-	tipoQr := c.GetString("tipoQR")
+	idEspacio := c.GetString(":idEspacio")
+	tipoQr := c.GetString(":tipoQR")
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -116,7 +116,7 @@ func (c *AccesoController) GetIngreso() {
 		panic(map[string]interface{}{"funcion": "GetAutorizacion", "err": "Error parametro de ingreso \"idEspacio\"", "status": "400", "log": err})
 	}
 	if tipoQr != "out" && tipoQr != "in" {
-		panic(map[string]interface{}{"funcion": "GetAutorizacion", "err": "Error parametro de ingreso \"tipoQR\"", "status": "400", "log": "El parámetro no cumple con las condiciones"})
+		panic(map[string]interface{}{"funcion": "GetAutorizacion", "err": "Error parametro de ingreso \"tipoQR\"", "status": "400", "log": "El parámetro no cumple con las condiciones (in/out)"})
 	}
 
 	if respuesta, err := helpers.ActualizarAforo(idEspacio, tipoQr); err == nil {
