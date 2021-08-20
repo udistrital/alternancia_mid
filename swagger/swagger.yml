@@ -11,7 +11,7 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
 basePath: /v1
 paths:
-  /acceso/{idQr}/{idScan}/:
+  /acceso/{idQr}/{idScan}/{tipo}:
     get:
       tags:
       - acceso
@@ -30,6 +30,11 @@ paths:
         required: true
         type: integer
         format: int64
+      - in: path
+        name: tipo
+        description: Tipo de escaneo (in/out)
+        required: true
+        type: string
       - in: query
         name: sede
         description: Id de la sede a consultar
@@ -41,16 +46,9 @@ paths:
         description: Id del edificio a consultar
         type: integer
         format: int64
-        default: "false"
       - in: query
         name: aula
         description: Id del aula a consultar
-        type: string
-        default: "false"
-      - in: query
-        name: tipo
-        description: Tipo de escaneo (in/out)
-        required: true
         type: string
       responses:
         "200":
