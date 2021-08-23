@@ -62,7 +62,7 @@ func (c *AccesoController) GetAutorizacion() {
 		panic(map[string]interface{}{"funcion": "GetAutorizacion", "err": "Error parametro de ingreso \"idScan\"", "status": "400", "log": err})
 	}
 	if tipo != "in" && tipo != "out" {
-		panic(map[string]interface{}{"funcion": "GetAutorizacion", "err": "Error parametro de ingreso \"tipo\"", "status": "400", "log": err})
+		panic(map[string]interface{}{"funcion": "GetAutorizacion", "err": "Error parametro de ingreso \"tipo\"", "status": "400", "log": "El parámetro no cumple con las condiciones (in/out)"})
 	}
 	_, err = strconv.Atoi(sede)
 	if err != nil {
