@@ -15,7 +15,7 @@
     },
     "basePath": "/v1",
     "paths": {
-        "/acceso/idEspacio/tipoQR": {
+        "/acceso/{idEspacio}/{tipoQR}": {
             "get": {
                 "tags": [
                     "acceso"
@@ -41,7 +41,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.Persona"
+                        }
                     },
                     "404": {
                         "description": "No found resource"

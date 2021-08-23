@@ -262,7 +262,6 @@ func ActualizarAforo(idEspacio string, tipoQr string) (persona models.Persona, o
 		} else if valor == 0 {
 			persona.Acceso = "No autorizado"
 		} else {
-			persona.Acceso = "No autorizado"
 			logs.Error(err1)
 			outputError = map[string]interface{}{"funcion": "/ActualizarAforo", "err": err1, "status": "502"}
 			return models.Persona{}, outputError
