@@ -68,7 +68,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 				var respuesta_peticion_salones []models.EspacioFisicoPadre
 				salon = strings.ToUpper(salon)
 				coincidencias := 0
-				if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_padre/?limit=-1&query=padre_id:"+idEdificio, &respuesta_peticion_salones); (err == nil) && (response == 200) {
+				if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_padre/?limit=-1&query=Padre.Id:"+idEdificio, &respuesta_peticion_salones); (err == nil) && (response == 200) {
 					if len(respuesta_peticion_salones) > 0 {
 						for _, espacio := range respuesta_peticion_salones {
 							hijo := espacio.HijoId
@@ -285,7 +285,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 
 func ConsultarAforo(id string) (aforo int, outputError map[string]interface{}) {
 	var respuesta_peticion_aforo []models.EspacioFisicoCampo
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=campo_id:5,espacio_fisico_id:"+id, &respuesta_peticion_aforo); (err == nil) && (response == 200) {
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=campo_id:5,EspacioFisico.Id:"+id, &respuesta_peticion_aforo); (err == nil) && (response == 200) {
 		if len(respuesta_peticion_aforo) != 0 {
 			aforoStr := respuesta_peticion_aforo[0].Valor
 			aforo, err = strconv.Atoi(aforoStr)
@@ -295,7 +295,7 @@ func ConsultarAforo(id string) (aforo int, outputError map[string]interface{}) {
 				return 0, outputError
 			}
 		} else {
-			outputError = map[string]interface{}{"funcion": "/ConsultarAforo", "err": err, "status": "502"}
+			outputError = map[string]interface{}{"funcion": "/ConsultarAforo", "err": "No hay aforo registrado para el espacio", "status": "502"}
 			return 0, outputError
 		}
 	} else {
@@ -308,7 +308,7 @@ func ConsultarAforo(id string) (aforo int, outputError map[string]interface{}) {
 
 func ConsultarCupo(id string, cupo interface{}) (outputError map[string]interface{}) {
 	var respuesta_peticion_cupo []map[string]interface{}
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=campo_id:4,espacio_fisico_id:"+id, &respuesta_peticion_cupo); (err == nil) && (response == 200) {
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=Campo.Id:4,EspacioFisico.Id:"+id, &respuesta_peticion_cupo); (err == nil) && (response == 200) {
 		if len(respuesta_peticion_cupo) != 0 {
 			res, err1 := json.Marshal(respuesta_peticion_cupo[0])
 			if err1 != nil {
