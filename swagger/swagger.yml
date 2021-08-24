@@ -11,13 +11,19 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
 basePath: /v1
 paths:
-  /acceso/{idEspacio}/{tipoQR}:
+  /acceso/{idPersona}/{idEspacio}/{tipoQR}:
     get:
       tags:
       - acceso
       description: Da el acceso al estudiante
       operationId: AccesoController.GetAcceso
       parameters:
+      - in: path
+        name: idPersona
+        description: Id de quien accede
+        required: true
+        type: integer
+        format: int64
       - in: path
         name: idEspacio
         description: Id del salon al que se accede
@@ -36,7 +42,7 @@ paths:
             $ref: '#/definitions/models.Persona'
         "404":
           description: No found resource
-  /acceso/{idQr}/{idScan}/{tipo}:
+  /acceso/{idQr}/{idScan}:
     get:
       tags:
       - acceso
@@ -55,7 +61,7 @@ paths:
         required: true
         type: integer
         format: int64
-      - in: path
+      - in: query
         name: tipo
         description: Tipo de escaneo (in/out)
         required: true

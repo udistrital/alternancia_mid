@@ -24,17 +24,17 @@ func (c *AccesoController) URLMapping() {
 // @Description Consulta autorización de acceso para quien muestra el QR
 // @Param	idQr		path 	int			true			"Id de terceros de quien solicita acceso"
 // @Param	idScan		path 	int			true			"Id de terceros de quien escanea"
-// @Param	tipo		path 	string		true			"Tipo de escaneo (in/out)"
+// @Param	tipo		query 	string		true			"Tipo de escaneo (in/out)"
 // @Param	sede		query 	int			true			"Id de la sede a consultar"
 // @Param	edificio	query 	int			""				"Id del edificio a consultar"
 // @Param	aula		query 	string		""				"Id del aula a consultar"
 // @Success 200 {object} models.Persona
 // @Failure 404	No found resource
-// @router /:idQr/:idScan/:tipo [get]
+// @router /:idQr/:idScan [get]
 func (c *AccesoController) GetAutorizacion() {
 	idQrStr := c.GetString(":idQr")
 	idScanStr := c.GetString(":idScan")
-	tipo := c.GetString(":tipo")
+	tipo := c.GetString("tipo")
 	sede := c.GetString("sede")
 	edificio := c.GetString("edificio")
 	aula := c.GetString("aula")
@@ -88,13 +88,14 @@ func (c *AccesoController) GetAutorizacion() {
 // GetAcceso ...
 // @Title GetAcceso
 // @Description Da el acceso al estudiante
+// @Param	idPersona		path 	int			true			"Id de quien accede"
 // @Param	idEspacio		path 	int			true			"Id del salon al que se accede"
 // @Param	tipoQR			path 	string		true			"Determina si el qr escaneado es de entrada o salida (in/out)"
 // @Success 200 {object} models.Persona
 // @Failure 404	No found resource
-// @router /:idEspacio/:tipoQR [get]
+// @router /:idPersona/:idEspacio/:tipoQR [get]
 func (c *AccesoController) GetIngreso() {
-
+	idPersona := c.GetString(":idPersona")
 	idEspacio := c.GetString(":idEspacio")
 	tipoQr := c.GetString(":tipoQR")
 
@@ -112,6 +113,9 @@ func (c *AccesoController) GetIngreso() {
 		}
 	}()
 
+	if _, err := strconv.Atoi(idPersona); err != nil {
+		panic(map[string]interface{}{"funcion": "GetAutorizacion", "err": "Error parametro de ingreso \"idPersona\"", "status": "400", "log": err})
+	}
 	if _, err := strconv.Atoi(idEspacio); err != nil {
 		panic(map[string]interface{}{"funcion": "GetAutorizacion", "err": "Error parametro de ingreso \"idEspacio\"", "status": "400", "log": err})
 	}
@@ -119,7 +123,7 @@ func (c *AccesoController) GetIngreso() {
 		panic(map[string]interface{}{"funcion": "GetAutorizacion", "err": "Error parametro de ingreso \"tipoQR\"", "status": "400", "log": "El parámetro no cumple con las condiciones (in/out)"})
 	}
 
-	if respuesta, err := helpers.ActualizarAforo(idEspacio, tipoQr); err == nil {
+	if respuesta, err := helpers.ActualizarAforo(idPersona, idEspacio, tipoQr); err == nil {
 		c.Ctx.Output.SetStatus(200)
 		c.Data["json"] = map[string]interface{}{"Success": true, "Status": "200", "Message": "Successful", "Data": respuesta}
 	} else {
