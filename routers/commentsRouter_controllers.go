@@ -10,7 +10,7 @@ func init() {
     beego.GlobalControllerRouter["github.com/udistrital/alternancia_mid/controllers:AccesoController"] = append(beego.GlobalControllerRouter["github.com/udistrital/alternancia_mid/controllers:AccesoController"],
         beego.ControllerComments{
             Method: "GetIngreso",
-            Router: `/:idEspacio/:tipoQR`,
+            Router: `/:idPersona/:idEspacio/:tipoQR`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
@@ -19,7 +19,7 @@ func init() {
     beego.GlobalControllerRouter["github.com/udistrital/alternancia_mid/controllers:AccesoController"] = append(beego.GlobalControllerRouter["github.com/udistrital/alternancia_mid/controllers:AccesoController"],
         beego.ControllerComments{
             Method: "GetAutorizacion",
-            Router: `/:idQr/:idScan/:tipo`,
+            Router: `/:idQr/:idScan`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,

@@ -39,83 +39,38 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 			//var materiasDia []models.CargaAcademica
 
 			//Consulta de comorbilidades
-			var respuesta_peticion_comorbilidades []models.InfoComplementariaTercero
-			var dato map[string]interface{}
-			if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?limit=-1&query=tercero_id:"+idQr+",InfoComplementariaId.GrupoInfoComplementariaId.Id:47", &respuesta_peticion_comorbilidades); (err == nil) && (response == 200) {
-				for _, info := range respuesta_peticion_comorbilidades {
-					json.Unmarshal([]byte(info.Dato), &dato)
-					if dato["dato"] == true {
-						comorbilidad = true
-					}
-				}
-			} else {
-				logs.Error(err)
-				outputError = map[string]interface{}{"funcion": "/ConsultarComorbilidades", "err": err, "status": "502"}
-				return models.Persona{}, outputError
+			comorbilidad, err1 := ConsultarComorbilidades(idQr)
+			if err1 != nil {
+				logs.Error(err1)
+				return models.Persona{}, err1
 			}
 
 			//Consulta de vacunacion
-			var respuesta_peticion_vacuna []models.InfoComplementariaTercero
-			if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?query=tercero_id:"+idQr+",InfoComplementariaId:305", &respuesta_peticion_vacuna); (err == nil) && (response == 200) {
-				if len(respuesta_peticion_vacuna) != 0 {
-					layout := "2006-01-02T15:04:05.000Z"
-					var dato map[string]interface{}
-					json.Unmarshal([]byte(respuesta_peticion_vacuna[0].Dato), &dato)
-					var fecha = dato["dato"]
-					data, _ := json.Marshal(fecha)
-					if string(data) != "\"\"" {
-						str := fmt.Sprintf("%v", fecha)
-						t, err := time.Parse(layout, str)
-
-						if err != nil {
-							outputError = map[string]interface{}{"funcion": "/ConsultarVacuna", "err": err, "status": "502"}
-							return models.Persona{}, outputError
-						}
-						duracion := time.Since(t)
-						dias := int(duracion.Hours() / 24)
-						if dias > 14 {
-							vacuna = true
-						}
-					}
-				}
-			} else {
-				logs.Error(err)
-				outputError = map[string]interface{}{"funcion": "/ConsultarVacuna", "err": err, "status": "502"}
-				return models.Persona{}, outputError
+			vacuna, err1 = ConsultarVacuna(idQr)
+			if err1 != nil {
+				logs.Error(err1)
+				return models.Persona{}, err1
 			}
 
 			//Consulta de sintomas
-			var respuesta_peticion_sintomas map[string]interface{}
-			var sintoma []models.Sintomas
-			if response, err := getJsonTest(beego.AppConfig.String("UrlCrudSintomas")+"sintomas?limit=1&order=desc&sortby=fecha_creacion&query=terceroId:"+idQr, &respuesta_peticion_sintomas); (err == nil) && (response == 200) {
-				LimpiezaRespuestaRefactor(respuesta_peticion_sintomas, &sintoma)
-				sintomasRegistrados := sintoma[0].InfoSalud
-				sintomas = (sintomasRegistrados.Agotamiento ||
-					sintomasRegistrados.CongestionNasal ||
-					sintomasRegistrados.ContactoCovid ||
-					sintomasRegistrados.DificultadRespiratoria ||
-					sintomasRegistrados.EstadoEmbarazo ||
-					sintomasRegistrados.Fiebre ||
-					sintomasRegistrados.MalestarGeneral)
-			} else {
-				logs.Error(err)
-				outputError = map[string]interface{}{"funcion": "/ConsultarSintomas", "err": err, "status": "502"}
-				return models.Persona{}, outputError
+			sintomas, err1 = ConsultarSintomas(idQr)
+			if err1 != nil {
+				logs.Error(err1)
+				return models.Persona{}, err1
 			}
 
 			if idEdificio != "" {
 				id = idEdificio
 			}
-
 			if salon != "" {
 				//Busqueda de id de espacio
 				var respuesta_peticion_salones []models.EspacioFisicoPadre
 				salon = strings.ToUpper(salon)
 				coincidencias := 0
-				if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_padre/?limit=-1&query=padre_id:"+idEdificio, &respuesta_peticion_salones); (err == nil) && (response == 200) {
+				if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_padre/?limit=-1&query=PadreId.Id:"+idEdificio, &respuesta_peticion_salones); (err == nil) && (response == 200) {
 					if len(respuesta_peticion_salones) > 0 {
 						for _, espacio := range respuesta_peticion_salones {
-							hijo := espacio.HijoId
+							hijo := espacio.Hijo
 							if strings.Contains(hijo.Nombre, salon) {
 								id = strconv.Itoa(hijo.Id)
 								coincidencias = coincidencias + 1
@@ -143,7 +98,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 			}
 
 			//Consulta de aforo
-			aforo, err1 := ConsultarAforo(id)
+			aforo, err1 = ConsultarAforo(id)
 			if err1 != nil {
 				logs.Error(err1)
 				outputError = map[string]interface{}{"funcion": "/ConsultarAforo", "err": err1, "status": "502"}
@@ -231,6 +186,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 				}
 			}
 		} else {
+			logs.Error("No hay datos de caracterización registrados para el usuario")
 			outputError = map[string]interface{}{"funcion": "/Autorizacion", "err": "No hay datos de caracterización registrados para el usuario", "status": "502"}
 			return models.Persona{}, outputError
 		}
@@ -243,29 +199,67 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 	return
 }
 
-func ActualizarAforo(idEspacio string, tipoQr string) (persona models.Persona, outputError map[string]interface{}) {
+func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona models.Persona, outputError map[string]interface{}) {
 	var cupo models.EspacioFisicoCampo
 	err := ConsultarCupo(idEspacio, &cupo)
+	var respuesta_peticion []models.InfoComplementariaTercero
 	if err != nil {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/ActualizarAforo", "err": err, "status": "502"}
 		return models.Persona{}, outputError
 	}
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?limit=-1&query=tercero_id:"+idPersona, &respuesta_peticion); (err == nil) && (response == 200) {
+		if len(respuesta_peticion) != 0 {
+			persona.Nombre = respuesta_peticion[0].TerceroId.NombreCompleto
+			persona.Fecha = time.Now()
+		} else {
+			logs.Error("No hay datos de caracterización registrados para el usuario")
+			outputError = map[string]interface{}{"funcion": "/Autorizacion", "err": "No hay datos de caracterización registrados para el usuario", "status": "502"}
+			return models.Persona{}, outputError
+		}
+	} else {
+		logs.Error(err)
+		outputError = map[string]interface{}{"funcion": "/Autorizacion", "err": err, "status": "502"}
+		return models.Persona{}, outputError
+	}
 	if tipoQr == "in" {
-		if valor, err1 := strconv.Atoi(cupo.Valor); valor > 0 && err1 == nil {
+		valorCupo, err1 := strconv.Atoi(cupo.Valor)
+		if err1 != nil {
+			logs.Error(err1)
+			outputError = map[string]interface{}{"funcion": "/ActualizarAforo", "err": err1, "status": "502"}
+			return models.Persona{}, outputError
+		}
+		comorbilidades, err := ConsultarComorbilidades(idPersona)
+		if err != nil {
+			logs.Error(err)
+			return models.Persona{}, err
+		}
+		vacuna, err := ConsultarVacuna(idPersona)
+		if err != nil {
+			logs.Error(err)
+			return models.Persona{}, err
+		}
+		sintomas, err := ConsultarSintomas(idPersona)
+		if err != nil {
+			logs.Error(err)
+			return models.Persona{}, err
+		}
+		if valorCupo > 0 && (vacuna || !comorbilidades) && !sintomas {
 			persona.Acceso = "Autorizado"
 			_, err = ActualizarCupo(cupo, tipoQr)
 			if err != nil {
 				logs.Error(err)
 				return models.Persona{}, err
 			}
-		} else if valor == 0 {
-			persona.Acceso = "No autorizado"
-			persona.Causa = "No hay cupo disponible en el espacio"
 		} else {
-			logs.Error(err1)
-			outputError = map[string]interface{}{"funcion": "/ActualizarAforo", "err": err1, "status": "502"}
-			return models.Persona{}, outputError
+			persona.Acceso = "No autorizado"
+			if valorCupo == 0 {
+				persona.Causa = "No hay cupo disponible en el espacio"
+			} else if comorbilidades {
+				persona.Causa = "Presenta comorbilidades"
+			} else if sintomas {
+				persona.Causa = "Presenta sintomas"
+			}
 		}
 	} else if tipoQr == "out" {
 		aforo, err := ConsultarAforo(idEspacio)
@@ -290,7 +284,7 @@ func ActualizarAforo(idEspacio string, tipoQr string) (persona models.Persona, o
 
 func ConsultarAforo(id string) (aforo int, outputError map[string]interface{}) {
 	var respuesta_peticion_aforo []models.EspacioFisicoCampo
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=campo_id:5,espacio_fisico_id:"+id, &respuesta_peticion_aforo); (err == nil) && (response == 200) {
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=CampoId.Id:5,EspacioFisicoId.Id:"+id, &respuesta_peticion_aforo); (err == nil) && (response == 200) {
 		if len(respuesta_peticion_aforo) != 0 {
 			aforoStr := respuesta_peticion_aforo[0].Valor
 			aforo, err = strconv.Atoi(aforoStr)
@@ -300,7 +294,7 @@ func ConsultarAforo(id string) (aforo int, outputError map[string]interface{}) {
 				return 0, outputError
 			}
 		} else {
-			outputError = map[string]interface{}{"funcion": "/ConsultarAforo", "err": err, "status": "502"}
+			outputError = map[string]interface{}{"funcion": "/ConsultarAforo", "err": "No hay aforo registrado para el espacio", "status": "502"}
 			return 0, outputError
 		}
 	} else {
@@ -313,7 +307,7 @@ func ConsultarAforo(id string) (aforo int, outputError map[string]interface{}) {
 
 func ConsultarCupo(id string, cupo interface{}) (outputError map[string]interface{}) {
 	var respuesta_peticion_cupo []map[string]interface{}
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=campo_id:4,espacio_fisico_id:"+id, &respuesta_peticion_cupo); (err == nil) && (response == 200) {
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=CampoId.Id:4,EspacioFisicoId.Id:"+id, &respuesta_peticion_cupo); (err == nil) && (response == 200) {
 		if len(respuesta_peticion_cupo) != 0 {
 			res, err1 := json.Marshal(respuesta_peticion_cupo[0])
 			if err1 != nil {
@@ -351,6 +345,77 @@ func ActualizarCupo(cupo models.EspacioFisicoCampo, tipoScan string) (valor int,
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/ActualizarCupo", "err": err, "status": "502"}
 		return 0, outputError
+	}
+	return
+}
+
+func ConsultarSintomas(idQr string) (sintomas bool, outputError map[string]interface{}) {
+	var respuesta_peticion_sintomas map[string]interface{}
+	var sintoma []models.Sintomas
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudSintomas")+"sintomas?limit=1&order=desc&sortby=fecha_creacion&query=terceroId:"+idQr, &respuesta_peticion_sintomas); (err == nil) && (response == 200) {
+		LimpiezaRespuestaRefactor(respuesta_peticion_sintomas, &sintoma)
+		sintomasRegistrados := sintoma[0].InfoSalud
+		sintomas = (sintomasRegistrados.Agotamiento ||
+			sintomasRegistrados.CongestionNasal ||
+			sintomasRegistrados.ContactoCovid ||
+			sintomasRegistrados.DificultadRespiratoria ||
+			sintomasRegistrados.EstadoEmbarazo ||
+			sintomasRegistrados.Fiebre ||
+			sintomasRegistrados.MalestarGeneral)
+	} else {
+		logs.Error(err)
+		outputError = map[string]interface{}{"funcion": "/ConsultarSintomas", "err": err, "status": "502"}
+		return false, outputError
+	}
+	return
+}
+
+func ConsultarVacuna(idQr string) (vacuna bool, outputError map[string]interface{}) {
+	var respuesta_peticion_vacuna []models.InfoComplementariaTercero
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?query=tercero_id:"+idQr+",InfoComplementariaId:305", &respuesta_peticion_vacuna); (err == nil) && (response == 200) {
+		if len(respuesta_peticion_vacuna) != 0 {
+			layout := "2006-01-02T15:04:05.000Z"
+			var dato map[string]interface{}
+			json.Unmarshal([]byte(respuesta_peticion_vacuna[0].Dato), &dato)
+			var fecha = dato["dato"]
+			data, _ := json.Marshal(fecha)
+			if string(data) != "\"\"" {
+				str := fmt.Sprintf("%v", fecha)
+				t, err := time.Parse(layout, str)
+
+				if err != nil {
+					outputError = map[string]interface{}{"funcion": "/ConsultarVacuna", "err": err, "status": "502"}
+					return false, outputError
+				}
+				duracion := time.Since(t)
+				dias := int(duracion.Hours() / 24)
+				if dias > 14 {
+					vacuna = true
+				}
+			}
+		}
+	} else {
+		logs.Error(err)
+		outputError = map[string]interface{}{"funcion": "/ConsultarVacuna", "err": err, "status": "502"}
+		return false, outputError
+	}
+	return
+}
+
+func ConsultarComorbilidades(idQr string) (comorbilidad bool, outputError map[string]interface{}) {
+	var respuesta_peticion_comorbilidades []models.InfoComplementariaTercero
+	var dato map[string]interface{}
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?limit=-1&query=tercero_id:"+idQr+",InfoComplementariaId.GrupoInfoComplementariaId.Id:47", &respuesta_peticion_comorbilidades); (err == nil) && (response == 200) {
+		for _, info := range respuesta_peticion_comorbilidades {
+			json.Unmarshal([]byte(info.Dato), &dato)
+			if dato["dato"] == true {
+				comorbilidad = true
+			}
+		}
+	} else {
+		logs.Error(err)
+		outputError = map[string]interface{}{"funcion": "/ConsultarComorbilidades", "err": err, "status": "502"}
+		return false, outputError
 	}
 	return
 }
