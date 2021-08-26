@@ -62,7 +62,6 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 			if idEdificio != "" {
 				id = idEdificio
 			}
-
 			if salon != "" {
 				//Busqueda de id de espacio
 				var respuesta_peticion_salones []models.EspacioFisicoPadre
@@ -71,7 +70,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 				if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_padre/?limit=-1&query=PadreId.Id:"+idEdificio, &respuesta_peticion_salones); (err == nil) && (response == 200) {
 					if len(respuesta_peticion_salones) > 0 {
 						for _, espacio := range respuesta_peticion_salones {
-							hijo := espacio.HijoId
+							hijo := espacio.Hijo
 							if strings.Contains(hijo.Nombre, salon) {
 								id = strconv.Itoa(hijo.Id)
 								coincidencias = coincidencias + 1
