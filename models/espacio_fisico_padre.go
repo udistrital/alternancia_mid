@@ -1,7 +1,7 @@
 package models
 
 type EspacioFisicoPadre struct {
-	Id    int
-	Padre *EspacioFisico
-	Hijo  *EspacioFisico
+	Id      int
+	PadreId *EspacioFisico
+	HijoId  *EspacioFisico
 }
