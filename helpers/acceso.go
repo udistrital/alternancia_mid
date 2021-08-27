@@ -67,7 +67,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 				var respuesta_peticion_salones []models.EspacioFisicoPadre
 				salon = strings.ToUpper(salon)
 				coincidencias := 0
-				if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_padre/?limit=-1&query=PadreId.Id:"+idEdificio, &respuesta_peticion_salones); (err == nil) && (response == 200) {
+				if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_padre/?limit=-1&query=Padre.Id:"+idEdificio, &respuesta_peticion_salones); (err == nil) && (response == 200) {
 					if len(respuesta_peticion_salones) > 0 {
 						for _, espacio := range respuesta_peticion_salones {
 							hijo := espacio.Hijo
@@ -284,7 +284,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 
 func ConsultarAforo(id string) (aforo int, outputError map[string]interface{}) {
 	var respuesta_peticion_aforo []models.EspacioFisicoCampo
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=CampoId.Id:5,EspacioFisicoId.Id:"+id, &respuesta_peticion_aforo); (err == nil) && (response == 200) {
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=Campo.Id:5,EspacioFisico.Id:"+id, &respuesta_peticion_aforo); (err == nil) && (response == 200) {
 		if len(respuesta_peticion_aforo) != 0 {
 			aforoStr := respuesta_peticion_aforo[0].Valor
 			aforo, err = strconv.Atoi(aforoStr)
@@ -307,7 +307,7 @@ func ConsultarAforo(id string) (aforo int, outputError map[string]interface{}) {
 
 func ConsultarCupo(id string, cupo interface{}) (outputError map[string]interface{}) {
 	var respuesta_peticion_cupo []map[string]interface{}
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=CampoId.Id:4,EspacioFisicoId.Id:"+id, &respuesta_peticion_cupo); (err == nil) && (response == 200) {
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=Campo.Id:4,EspacioFisico.Id:"+id, &respuesta_peticion_cupo); (err == nil) && (response == 200) {
 		if len(respuesta_peticion_cupo) != 0 {
 			res, err1 := json.Marshal(respuesta_peticion_cupo[0])
 			if err1 != nil {
