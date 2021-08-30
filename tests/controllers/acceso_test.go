@@ -21,7 +21,7 @@ func init() {
 
 // TestGet is a sample to run an endpoint test
 func TestGetAutorizacion(t *testing.T) {
-	r, _ := http.NewRequest("GET", "http://localhost:8080/v1/acceso/9851/9851/?tipo=out&sede=1096", nil)
+	r, _ := http.NewRequest("GET", "http://pruebasapi2.intranetoas.udistrital.edu.co:8525/v1/acceso/9851/9851/?tipo=out&sede=1096", nil)
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
 
@@ -38,7 +38,7 @@ func TestGetAutorizacion(t *testing.T) {
 }
 
 func TestGetIngreso(t *testing.T) {
-	r, _ := http.NewRequest("GET", "http://localhost:8080/v1/acceso/9851/1096/out", nil)
+	r, _ := http.NewRequest("GET", "http://pruebasapi2.intranetoas.udistrital.edu.co:8525/v1/acceso/9851/1096/out", nil)
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
 
