@@ -372,7 +372,7 @@ func ConsultarSintomas(idQr string) (sintomas bool, outputError map[string]inter
 
 func ConsultarVacuna(idQr string) (vacuna bool, outputError map[string]interface{}) {
 	var respuesta_peticion_vacuna []models.InfoComplementariaTercero
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?query=tercero_id:"+idQr+",InfoComplementariaId:305", &respuesta_peticion_vacuna); (err == nil) && (response == 200) {
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?query=tercero_id:"+idQr+",InfoComplementariaId:111", &respuesta_peticion_vacuna); (err == nil) && (response == 200) {
 		if len(respuesta_peticion_vacuna) != 0 {
 			layout := "2006-01-02T15:04:05.000Z"
 			var dato map[string]interface{}
