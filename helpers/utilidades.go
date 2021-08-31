@@ -82,13 +82,13 @@ func SendJson(urlp string, trequest string, target interface{}, datajson interfa
 				beego.Error("Error reading response. ", err)
 			}
 
-			defer resp.Body.Close()
 			respuesta := map[string]interface{}{"message": resp.Body, "status": resp.StatusCode}
 			e, err := json.Marshal(respuesta)
 			if err != nil {
 				logs.Error(err)
 			}
 
+			defer resp.Body.Close()
 			json.Unmarshal(e, &target)
 		}
 	}()
