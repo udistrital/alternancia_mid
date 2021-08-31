@@ -3,7 +3,7 @@ package helpers
 import (
 	"bytes"
 	"encoding/json"
-	"ioutil"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -109,7 +109,7 @@ func SendJson(urlp string, trequest string, target interface{}, datajson interfa
 	if err != nil {
 		beego.Error("Error converting response. ", err)
 	}
-	respuesta := map[string]interface{}{"request": map[string]interface{}{"url": req.URL.String(), "body": datajson}, "body": mensaje, "statusCode": resp.StatusCode, "status": resp.Status}
+	respuesta := map[string]interface{}{"request": map[string]interface{}{"url": req.URL.String(), "body": datajson}, "body": string(mensaje), "statusCode": resp.StatusCode, "status": resp.Status}
 	e, err := json.Marshal(respuesta)
 	if err != nil {
 		logs.Error(err)
