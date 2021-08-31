@@ -39,7 +39,7 @@ func putJson(url string, id string, body models.EspacioFisicoCampo) (outputError
 	}
 
 	json.Unmarshal(e, &env)
-	if err := SendJson(url+"/"+strconv.Itoa(body.Id), "PUT", &res, env); err != nil || res["statusCode"] != 200 {
+	if err := SendJson(url+"/"+strconv.Itoa(body.Id), "PUT", &res, env); err != nil {
 		logs.Error(err)
 		logs.Error(res)
 		outputError = map[string]interface{}{"funcion": "/PutJson", "err": err, "status": "502"}
