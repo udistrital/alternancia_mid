@@ -1,7 +1,9 @@
 package models
 
 type EspacioFisico struct {
-	Id            int
-	Nombre        string
-	TipoEspacioId *TipoEspacio `json:"TipoEspacio"`
+	Id          int
+	Estado      string
+	Nombre      string
+	TipoEspacio *TipoEspacio
+	Codigo      string
 }
