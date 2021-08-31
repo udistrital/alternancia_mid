@@ -27,6 +27,7 @@ func getJsonTest(url string, target interface{}) (status int, err error) {
 }
 
 func putJson(url string, id string, body models.EspacioFisicoCampo) (outputError map[string]interface{}) {
+	var res map[string]interface{}
 	var env map[string]interface{}
 	
 	e, err := json.Marshal(body)
@@ -36,8 +37,10 @@ func putJson(url string, id string, body models.EspacioFisicoCampo) (outputError
 		return outputError
 	}
 	json.Unmarshal(e, &env)
-	if err := SendJson(url+"/"+strconv.Itoa(body.Id), "PUT", env); err != nil {
+	if err := SendJson(url+"/"+strconv.Itoa(body.Id), "PUT", &res, env); err != nil || res["status"] != 200 {
 		logs.Error(err)
+		logs.Error(res["status"])
+		logs.Error(res["message"])
 		outputError = map[string]interface{}{"funcion": "/PutJson", "err": err, "status": "502"}
 		return outputError
 	}
@@ -52,7 +55,7 @@ func LimpiezaRespuestaRefactor(respuesta map[string]interface{}, v interface{}) 
 	json.Unmarshal(b, &v)
 }
 
-func SendJson(urlp string, trequest string, datajson interface{}) (err error) {
+func SendJson(urlp string, trequest string, target interface{}, datajson interface{}) error {
 	b := new(bytes.Buffer)
 	if datajson != nil {
 		json.NewEncoder(b).Encode(datajson)
@@ -62,6 +65,10 @@ func SendJson(urlp string, trequest string, datajson interface{}) (err error) {
 
 	client := &http.Client{}
 	req, err := http.NewRequest(trequest, urlp, b)
+	if err != nil {
+		logs.Error(err)
+		return err
+	}
 
 	//Se intenta acceder a cabecera, si no existe, se realiza peticion normal.
 	defer func() {
@@ -75,6 +82,13 @@ func SendJson(urlp string, trequest string, datajson interface{}) (err error) {
 			}
 
 			defer resp.Body.Close()
+			respuesta := map[string]interface{}{"message": resp.Body, "status": resp.StatusCode}
+			e, err := json.Marshal(respuesta)
+			if err != nil {
+				logs.Error(err)
+			}
+
+			json.Unmarshal(e, &target)
 		}
 	}()
 
@@ -84,9 +98,13 @@ func SendJson(urlp string, trequest string, datajson interface{}) (err error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		beego.Error("Error reading response. ", err)
-		return err
+	}
+	respuesta := map[string]interface{}{"message": resp.Body, "status": resp.StatusCode}
+	e, err := json.Marshal(respuesta)
+	if err != nil {
+		logs.Error(err)
 	}
 
 	defer resp.Body.Close()
-	return
+	return json.Unmarshal(e, &target)
 }
