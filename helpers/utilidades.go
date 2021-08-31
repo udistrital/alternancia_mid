@@ -35,11 +35,9 @@ func putJson(url string, id string, body models.EspacioFisicoCampo) (outputError
 		outputError = map[string]interface{}{"funcion": "/PutJson", "err": err, "status": "502"}
 		return outputError
 	}
-	logs.Debug(e)
 	json.Unmarshal(e, &env)
 	if err := SendJson(url+"/"+strconv.Itoa(body.Id), "PUT", env); err != nil {
 		logs.Error(err)
-		logs.Error(res)
 		outputError = map[string]interface{}{"funcion": "/PutJson", "err": err, "status": "502"}
 		return outputError
 	}
