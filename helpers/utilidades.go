@@ -38,10 +38,9 @@ func putJson(url string, id string, body models.EspacioFisicoCampo) (outputError
 	}
 
 	json.Unmarshal(e, &env)
-	if err := SendJson(url+"/"+strconv.Itoa(body.Id), "PUT", &res, env); err != nil || res["status"] != 200 {
+	if err := SendJson(url+"/"+strconv.Itoa(body.Id), "PUT", &res, env); err != nil || res["statusCode"] != 200 {
 		logs.Error(err)
-		logs.Error(res["status"])
-		logs.Error(res["message"])
+		logs.Error(res)
 		outputError = map[string]interface{}{"funcion": "/PutJson", "err": err, "status": "502"}
 		return outputError
 	}
@@ -82,7 +81,7 @@ func SendJson(urlp string, trequest string, target interface{}, datajson interfa
 				beego.Error("Error reading response. ", err)
 			}
 
-			respuesta := map[string]interface{}{"message": resp.Body, "status": resp.StatusCode}
+			respuesta := map[string]interface{}{"body": resp.Body, "statusCode": resp.StatusCode, "status": resp.Status}
 			e, err := json.Marshal(respuesta)
 			if err != nil {
 				logs.Error(err)
@@ -100,7 +99,7 @@ func SendJson(urlp string, trequest string, target interface{}, datajson interfa
 	if err != nil {
 		beego.Error("Error reading response. ", err)
 	}
-	respuesta := map[string]interface{}{"message": resp.Body, "status": resp.StatusCode}
+	respuesta := map[string]interface{}{"body": resp.Body, "statusCode": resp.StatusCode, "status": resp.Status}
 	e, err := json.Marshal(respuesta)
 	if err != nil {
 		logs.Error(err)
