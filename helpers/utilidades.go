@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -8,7 +9,6 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/udistrital/alternancia_mid/models"
-	"github.com/udistrital/utils_oas/request"
 )
 
 //-------------------------Utilidades generales---------------------------
@@ -27,7 +27,6 @@ func getJsonTest(url string, target interface{}) (status int, err error) {
 }
 
 func putJson(url string, id string, body models.EspacioFisicoCampo) (outputError map[string]interface{}) {
-	var res map[string]interface{}
 	var env map[string]interface{}
 	
 	e, err := json.Marshal(body)
@@ -38,7 +37,7 @@ func putJson(url string, id string, body models.EspacioFisicoCampo) (outputError
 	}
 	logs.Debug(e)
 	json.Unmarshal(e, &env)
-	if err := request.SendJson(url+"/"+strconv.Itoa(body.Id), "PUT", &res, env); err != nil {
+	if err := SendJson(url+"/"+strconv.Itoa(body.Id), "PUT", env); err != nil {
 		logs.Error(err)
 		logs.Error(res)
 		outputError = map[string]interface{}{"funcion": "/PutJson", "err": err, "status": "502"}
@@ -53,4 +52,43 @@ func LimpiezaRespuestaRefactor(respuesta map[string]interface{}, v interface{}) 
 		panic(err)
 	}
 	json.Unmarshal(b, &v)
+}
+
+func SendJson(urlp string, trequest string, datajson interface{}) (err error) {
+	b := new(bytes.Buffer)
+	if datajson != nil {
+		json.NewEncoder(b).Encode(datajson)
+	}
+	//proxyUrl, err := url.Parse("http://10.20.4.15:3128")
+	//http.DefaultTransport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
+
+	client := &http.Client{}
+	req, err := http.NewRequest(trequest, urlp, b)
+
+	//Se intenta acceder a cabecera, si no existe, se realiza peticion normal.
+	defer func() {
+		//Catch
+		if r := recover(); r != nil {
+
+			client := &http.Client{}
+			resp, err := client.Do(req)
+			if err != nil {
+				beego.Error("Error reading response. ", err)
+			}
+
+			defer resp.Body.Close()
+		}
+	}()
+
+	//try
+	req.Header.Set("Authorization", "")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		beego.Error("Error reading response. ", err)
+		return err
+	}
+
+	defer resp.Body.Close()
+	return
 }
