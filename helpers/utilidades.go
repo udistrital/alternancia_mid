@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
@@ -47,7 +46,7 @@ func contarGet(url string) (conteo int, err error) {
 	return len(list), nil
 }
 
-func putJson(url string, id string, body models.EspacioFisicoCampo) (outputError map[string]interface{}) {
+/*func putJson(url string, id string, body models.EspacioFisicoCampo) (outputError map[string]interface{}) {
 	var res map[string]interface{}
 	var env map[string]interface{}
 
@@ -66,7 +65,7 @@ func putJson(url string, id string, body models.EspacioFisicoCampo) (outputError
 		return outputError
 	}
 	return
-}
+}*/
 
 func LimpiezaRespuestaRefactor(respuesta map[string]interface{}, v interface{}) {
 	b, err := json.Marshal(respuesta["Data"])
