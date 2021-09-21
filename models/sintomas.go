@@ -11,5 +11,6 @@ type Sintomas struct {
 		EstadoEmbarazo         bool `json:"estado_embarazo"`
 		ContactoCovid          bool `json:"contacto_covid"`
 	} `json:"info_salud"`
-	Activo bool `json:"activo"`
+	Activo        bool   `json:"activo"`
+	FechaCreacion string `json:"fecha_creacion"`
 }

@@ -27,6 +27,26 @@ func getJsonTest(url string, target interface{}) (status int, err error) {
 	return r.StatusCode, json.NewDecoder(r.Body).Decode(target)
 }
 
+func contarGet(url string) (conteo int, err error) {
+	r, err := http.Get(url)
+	if err != nil {
+		return r.StatusCode, err
+	}
+	var res map[string]interface{}
+	var list []models.RegistroTraza
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			beego.Error(err)
+		}
+	}()
+	err = json.NewDecoder(r.Body).Decode(&res)
+	if err != nil {
+		return r.StatusCode, err
+	}
+	LimpiezaRespuestaRefactor(res, &list)
+	return len(list), nil
+}
+
 func putJson(url string, id string, body models.EspacioFisicoCampo) (outputError map[string]interface{}) {
 	var res map[string]interface{}
 	var env map[string]interface{}
@@ -87,7 +107,11 @@ func SendJson(urlp string, trequest string, target interface{}, datajson interfa
 			if err != nil {
 				beego.Error("Error converting response. ", err)
 			}
-			respuesta := map[string]interface{}{"request": map[string]interface{}{"url": req.URL.String(), "body": datajson}, "body": mensaje, "statusCode": resp.StatusCode, "status": resp.Status}
+			bodyreq, err := ioutil.ReadAll(req.Body)
+			if err != nil {
+				beego.Error("Error converting response. ", err)
+			}
+			respuesta := map[string]interface{}{"request": map[string]interface{}{"url": req.URL.String(), "header": req.Header, "body": bodyreq}, "body": mensaje, "statusCode": resp.StatusCode, "status": resp.Status}
 			e, err := json.Marshal(respuesta)
 			if err != nil {
 				logs.Error(err)
@@ -98,6 +122,8 @@ func SendJson(urlp string, trequest string, target interface{}, datajson interfa
 
 	//try
 	req.Header.Set("Authorization", "")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("accept", "*/*")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -109,7 +135,11 @@ func SendJson(urlp string, trequest string, target interface{}, datajson interfa
 	if err != nil {
 		beego.Error("Error converting response. ", err)
 	}
-	respuesta := map[string]interface{}{"request": map[string]interface{}{"url": req.URL.String(), "body": datajson}, "body": string(mensaje), "statusCode": resp.StatusCode, "status": resp.Status}
+	bodyreq, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		beego.Error("Error converting response. ", err)
+	}
+	respuesta := map[string]interface{}{"request": map[string]interface{}{"url": req.URL.String(), "header": req.Header, "body": bodyreq}, "body": mensaje, "statusCode": resp.StatusCode, "status": resp.Status}
 	e, err := json.Marshal(respuesta)
 	if err != nil {
 		logs.Error(err)

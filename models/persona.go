@@ -1,10 +1,8 @@
 package models
 
-import "time"
-
 type Persona struct {
 	Nombre string
-	Fecha  time.Time
+	Fecha  string
 	Acceso string
 	Causa  string
 	Cupo   int
