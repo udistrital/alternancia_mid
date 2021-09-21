@@ -64,7 +64,7 @@ func ConsultarTraza(idPersona string) (traza models.TrazaEstudiante, outputError
 
 func GetSeguimiento(tipoReg string) (res_seguimiento []models.RegistroTraza, outputError map[string]interface{}) {
 	var res map[string]interface{}
-	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=0&query=tercero_id:"+idEstudiante+",tipo_registro:"+tipoReg, &res); status != 200 || err != nil {
+	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=0&query=tercero_id:"+idEstudiante+",tipo_registro:"+tipoReg+"&sortby=oikos_id,fecha_creacion&order=asc", &res); status != 200 || err != nil {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/GetTraza/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
 		return nil, outputError
