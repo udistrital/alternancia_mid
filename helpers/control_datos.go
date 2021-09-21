@@ -9,7 +9,6 @@ import (
 )
 
 var idEstudiante string
-var traza models.TrazaEstudiante
 var persona models.Tercero
 
 func ConsultarTraza(idPersona string) (trazaRes models.TrazaEstudiante, outputError map[string]interface{}) {
@@ -28,7 +27,7 @@ func ConsultarTraza(idPersona string) (trazaRes models.TrazaEstudiante, outputEr
 		return models.TrazaEstudiante{}, outputError
 	}
 
-	err := RegistrarTraza()
+	traza, err := RegistrarTraza()
 	if err != nil {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/GetTraza/RegistrarTraza", "err": err, "status": "502"}
@@ -38,13 +37,13 @@ func ConsultarTraza(idPersona string) (trazaRes models.TrazaEstudiante, outputEr
 	return traza, nil
 }
 
-func RegistrarTraza() (outputError map[string]interface{}) {
+func RegistrarTraza() (traza models.TrazaEstudiante, outputError map[string]interface{}) {
 	var res map[string]interface{}
 	var res_seguimiento []models.RegistroTraza
 	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=0&query=tercero_id:"+idEstudiante+"&sortby=fecha_creacion&order=asc", &res); status != 200 || err != nil {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/GetTraza/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
-		return outputError
+		return models.TrazaEstudiante{}, outputError
 	}
 	LimpiezaRespuestaRefactor(res, &res_seguimiento)
 	traza.Estudiante = persona.NombreCompleto
@@ -55,7 +54,7 @@ func RegistrarTraza() (outputError map[string]interface{}) {
 		if status, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico/"+strconv.Itoa(reg.EspacioId), &espacio); status != 200 || err != nil {
 			logs.Error(err)
 			outputError = map[string]interface{}{"funcion": "/GetTraza/GetOikos/id:" + strconv.Itoa(reg.EspacioId), "err": err, "responseStatus": status, "status": "502"}
-			return outputError
+			return models.TrazaEstudiante{}, outputError
 		}
 		if reg.TipoEspacioId == 1 {
 			if reg.TipoEscaneo == "I" {
