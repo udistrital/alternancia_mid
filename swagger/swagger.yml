@@ -88,7 +88,32 @@ paths:
             $ref: '#/definitions/models.Persona'
         "404":
           description: No found resource
+  /control_datos/{id}:
+    get:
+      tags:
+      - control_datos
+      description: Devuelve la traza del estudiante
+      operationId: Control_datosController.GetTraza
+      parameters:
+      - in: path
+        name: id
+        description: Id del estudiante del que se quiere obtener la traza
+        required: true
+        type: integer
+        format: int64
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/models.TrazaEstudiante'
+        "403":
+          description: :id is empty
 definitions:
+  3585.0xc00046fd70.false:
+    title: "false"
+    type: object
   models.Persona:
     title: Persona
     type: object
@@ -102,10 +127,22 @@ definitions:
         format: int64
       Fecha:
         type: string
-        format: datetime
       Nombre:
         type: string
+  models.TrazaEstudiante:
+    title: TrazaEstudiante
+    type: object
+    properties:
+      Estudiante:
+        type: string
+      Sedes:
+        type: array
+        items:
+          $ref: '#/definitions/3585.0xc00046fd70.false'
 tags:
 - name: acceso
   description: |
     AccesoController operations for Acceso
+- name: control_datos
+  description: |
+    Control_datosController operations for Control_datos
