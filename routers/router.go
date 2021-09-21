@@ -20,6 +20,11 @@ func init() {
 				&controllers.AccesoController{},
 			),
 		),
+		beego.NSNamespace("/control_datos",
+			beego.NSInclude(
+				&controllers.Control_datosController{},
+			),
+		),
 	)
 	beego.AddNamespace(ns)
 }
