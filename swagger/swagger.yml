@@ -111,21 +111,9 @@ paths:
         "403":
           description: :id is empty
 definitions:
-  models.EspacioFisico:
-    title: EspacioFisico
+  3585.0xc00046fd70.false:
+    title: "false"
     type: object
-    properties:
-      Codigo:
-        type: string
-      Estado:
-        type: string
-      Id:
-        type: integer
-        format: int64
-      Nombre:
-        type: string
-      TipoEspacio:
-        $ref: '#/definitions/models.TipoEspacio'
   models.Persona:
     title: Persona
     type: object
@@ -139,72 +127,18 @@ definitions:
         format: int64
       Fecha:
         type: string
-        format: datetime
-      Nombre:
-        type: string
-  models.Tercero:
-    title: Tercero
-    type: object
-    properties:
-      Activo:
-        type: boolean
-      FechaNacimiento:
-        type: string
-        format: datetime
-      Id:
-        type: integer
-        format: int64
-      LugarOrigen:
-        type: integer
-        format: int64
-      NombreCompleto:
-        type: string
-      PrimerApellido:
-        type: string
-      PrimerNombre:
-        type: string
-      SegundoApellido:
-        type: string
-      SegundoNombre:
-        type: string
-      TipoContribuyenteId:
-        $ref: '#/definitions/models.TipoContribuyente'
-      UsuarioWSO2:
-        type: string
-  models.TipoContribuyente:
-    title: TipoContribuyente
-    type: object
-    properties:
-      Activo:
-        type: boolean
-      CodigoAbreviacion:
-        type: string
-      Descripcion:
-        type: string
-      Id:
-        type: integer
-        format: int64
-      Nombre:
-        type: string
-  models.TipoEspacio:
-    title: TipoEspacio
-    type: object
-    properties:
-      Id:
-        type: integer
-        format: int64
       Nombre:
         type: string
   models.TrazaEstudiante:
     title: TrazaEstudiante
     type: object
     properties:
-      EspacioId:
-        $ref: '#/definitions/models.EspacioFisico'
-      EstudianteId:
-        $ref: '#/definitions/models.Tercero'
-      Fecha:
+      Estudiante:
         type: string
+      Sedes:
+        type: array
+        items:
+          $ref: '#/definitions/3585.0xc00046fd70.false'
 tags:
 - name: acceso
   description: |
