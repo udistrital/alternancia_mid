@@ -9,9 +9,10 @@ import (
 )
 
 var idEstudiante string
+var traza models.TrazaEstudiante
+var persona models.Tercero
 
-func ConsultarTraza(idPersona string) (traza models.TrazaEstudiante, outputError map[string]interface{}) {
-	var persona models.Tercero
+func ConsultarTraza(idPersona string) (trazaRes models.TrazaEstudiante, outputError map[string]interface{}) {
 	idEstudiante = idPersona
 
 	defer func() {
@@ -26,47 +27,92 @@ func ConsultarTraza(idPersona string) (traza models.TrazaEstudiante, outputError
 		outputError = map[string]interface{}{"funcion": "/GetTraza/GetTercero", "err": err, "responseStatus": status, "status": "502"}
 		return models.TrazaEstudiante{}, outputError
 	}
-	regEntrada, err := GetSeguimiento("I")
+
+	err := RegistrarTraza()
 	if err != nil {
 		logs.Error(err)
-		outputError = map[string]interface{}{"funcion": "/GetTraza/GetSeguimiento", "err": err, "status": "502"}
+		outputError = map[string]interface{}{"funcion": "/GetTraza/RegistrarTraza", "err": err, "status": "502"}
 		return models.TrazaEstudiante{}, outputError
-	}
-	regSalida, err := GetSeguimiento("S")
-	if err != nil {
-		logs.Error(err)
-		outputError = map[string]interface{}{"funcion": "/GetTraza/GetSeguimiento", "err": err, "status": "502"}
-		return models.TrazaEstudiante{}, outputError
-	}
-	for index, reg := range regEntrada {
-		var espacio models.EspacioFisico
-		if status, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico/"+strconv.Itoa(reg.EspacioId), &espacio); status != 200 || err != nil {
-			logs.Error(err)
-			outputError = map[string]interface{}{"funcion": "/GetTraza/GetOikos/id:" + strconv.Itoa(reg.EspacioId), "err": err, "responseStatus": status, "status": "502"}
-			return models.TrazaEstudiante{}, outputError
-		}
-		traza.Estudiante = persona.NombreCompleto
-		traza.Espacios = append(traza.Espacios, struct {
-			Nombre       string
-			FechaEntrada string
-			FechaSalida  string
-		}{
-			Nombre:       espacio.Nombre,
-			FechaEntrada: regEntrada[index].FechaCreacion,
-			FechaSalida:  regSalida[index].FechaCreacion,
-		})
 	}
 
-	return
+	return traza, nil
 }
 
-func GetSeguimiento(tipoReg string) (res_seguimiento []models.RegistroTraza, outputError map[string]interface{}) {
+func GetSeguimiento(tipoReg string, tipoEspacio string) (res_seguimiento []models.RegistroTraza, outputError map[string]interface{}) {
+
+	var persona models.Tercero
+	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"tercero/"+idEstudiante, &persona); status != 200 || err != nil {
+		logs.Error(err)
+		outputError = map[string]interface{}{"funcion": "/GetTraza/GetTercero", "err": err, "responseStatus": status, "status": "502"}
+		return nil, outputError
+	}
+
 	var res map[string]interface{}
-	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=0&query=tercero_id:"+idEstudiante+",tipo_registro:"+tipoReg+"&sortby=oikos_id,fecha_creacion&order=asc", &res); status != 200 || err != nil {
+	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=0&query=tercero_id:"+idEstudiante+",tipo_registro:"+tipoReg+",tipo_espacio_id:"+tipoEspacio+"&sortby=fecha_creacion&order=asc", &res); status != 200 || err != nil {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/GetTraza/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
 		return nil, outputError
 	}
 	LimpiezaRespuestaRefactor(res, &res_seguimiento)
+	return
+}
+
+func RegistrarTraza() (outputError map[string]interface{}) {
+	var res map[string]interface{}
+	var res_seguimiento []models.RegistroTraza
+	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=0&query=tercero_id:"+idEstudiante+"&sortby=fecha_creacion&order=asc", &res); status != 200 || err != nil {
+		logs.Error(err)
+		outputError = map[string]interface{}{"funcion": "/GetTraza/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
+		return outputError
+	}
+	LimpiezaRespuestaRefactor(res, &res_seguimiento)
+	traza.Estudiante = persona.NombreCompleto
+	var temp int
+	var tempAula int
+	for _, reg := range res_seguimiento {
+		var espacio models.EspacioFisico
+		if status, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico/"+strconv.Itoa(reg.EspacioId), &espacio); status != 200 || err != nil {
+			logs.Error(err)
+			outputError = map[string]interface{}{"funcion": "/GetTraza/GetOikos/id:" + strconv.Itoa(reg.EspacioId), "err": err, "responseStatus": status, "status": "502"}
+			return outputError
+		}
+		if reg.TipoEspacioId == 1 {
+			if reg.TipoEscaneo == "I" {
+				traza.Sedes = append(traza.Sedes, struct {
+					Nombre       string
+					FechaEntrada string
+					FechaSalida  string
+					Aulas        []struct {
+						Nombre       string
+						FechaEntrada string
+						FechaSalida  string
+					}
+				}{
+					Nombre:       espacio.Nombre,
+					FechaEntrada: reg.FechaCreacion,
+				})
+				temp = len(traza.Sedes) - 1
+			} else if reg.TipoEscaneo == "S" {
+				traza.Sedes[temp].FechaSalida = reg.FechaCreacion
+				temp = -1
+			}
+		} else if reg.TipoEspacioId == 3 {
+			if reg.TipoEscaneo == "I" {
+				traza.Sedes[temp].Aulas = append(traza.Sedes[temp].Aulas, struct {
+					Nombre       string
+					FechaEntrada string
+					FechaSalida  string
+				}{
+					Nombre:       espacio.Nombre,
+					FechaEntrada: reg.FechaCreacion,
+				})
+				tempAula = len(traza.Sedes[temp].Aulas) - 1
+			} else if reg.TipoEscaneo == "S" {
+				traza.Sedes[temp].Aulas[tempAula].FechaSalida = reg.FechaCreacion
+				tempAula = -1
+			}
+
+		}
+	}
 	return
 }
