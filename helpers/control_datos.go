@@ -38,8 +38,6 @@ func ConsultarTraza(idPersona string) (traza models.TrazaEstudiante, outputError
 		outputError = map[string]interface{}{"funcion": "/GetTraza/GetSeguimiento", "err": err, "status": "502"}
 		return models.TrazaEstudiante{}, outputError
 	}
-	logs.Debug(regEntrada)
-	logs.Debug(regSalida)
 	for index, reg := range regEntrada {
 		var espacio models.EspacioFisico
 		if status, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico/"+strconv.Itoa(reg.EspacioId), &espacio); status != 200 || err != nil {
