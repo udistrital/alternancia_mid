@@ -38,25 +38,6 @@ func ConsultarTraza(idPersona string) (trazaRes models.TrazaEstudiante, outputEr
 	return traza, nil
 }
 
-func GetSeguimiento(tipoReg string, tipoEspacio string) (res_seguimiento []models.RegistroTraza, outputError map[string]interface{}) {
-
-	var persona models.Tercero
-	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"tercero/"+idEstudiante, &persona); status != 200 || err != nil {
-		logs.Error(err)
-		outputError = map[string]interface{}{"funcion": "/GetTraza/GetTercero", "err": err, "responseStatus": status, "status": "502"}
-		return nil, outputError
-	}
-
-	var res map[string]interface{}
-	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=0&query=tercero_id:"+idEstudiante+",tipo_registro:"+tipoReg+",tipo_espacio_id:"+tipoEspacio+"&sortby=fecha_creacion&order=asc", &res); status != 200 || err != nil {
-		logs.Error(err)
-		outputError = map[string]interface{}{"funcion": "/GetTraza/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
-		return nil, outputError
-	}
-	LimpiezaRespuestaRefactor(res, &res_seguimiento)
-	return
-}
-
 func RegistrarTraza() (outputError map[string]interface{}) {
 	var res map[string]interface{}
 	var res_seguimiento []models.RegistroTraza
