@@ -294,6 +294,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 		return models.Persona{}, err
 	}
 	persona.Cupo = aforo - cupo
+	persona.Acceso = "No autorizado"
 	if tipoQr == "in" {
 		comorbilidades, msg, err := ConsultarComorbilidades(idPersona)
 		if err != nil {
