@@ -601,7 +601,7 @@ func validarFlujo(idTercero string, espacio models.EspacioFisico, tipo string) (
 	//get del nuevo api que traiga el último registro del tipo de espacio
 	var res map[string]interface{}
 	var seguimiento []models.RegistroTraza
-	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=1&order=desc&sortby=fecha_creacion", &res); status != 200 || err != nil {
+	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=1&query=tercero_id:"+idTercero+"&order=desc&sortby=fecha_creacion", &res); status != 200 || err != nil {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/ValidarFlujo/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
 		return false, outputError
