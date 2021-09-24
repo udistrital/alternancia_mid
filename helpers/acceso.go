@@ -207,11 +207,15 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 				}
 			} else {
 				if comorbilidad && !vacuna {
-					persona.Causa = "Presenta comorbilidad(es) y no tiene vacunacion"
+					persona.Causa = "Presenta comorbilidades y no tiene vacunación completada hace más de 15 dias"
 				} else if sintomas {
 					persona.Causa = "Presenta sintomas"
 				} else if !cupoDisponible {
-					persona.Causa = "No hay cupo disponible en el espacio"
+					if tipoScan == "in" {
+						persona.Causa = "No hay cupo disponible en el espacio"
+					} else {
+						persona.Causa = "El cupo del espacio ya está vacío y no se pueden registrar más salidas"
+					}
 				} else if !clase {
 					persona.Causa = "No tiene clase en este momento"
 				} else if !validacion {
@@ -375,7 +379,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 			if cupo == aforo {
 				persona.Causa = "No hay cupo disponible en el espacio"
 			} else if comorbilidades {
-				persona.Causa = "Presenta comorbilidades"
+				persona.Causa = "Presenta comorbilidades y no tiene vacunación completada hace más de 15 dias"
 			} else if sintomas {
 				persona.Causa = "Presenta sintomas"
 			}
@@ -428,7 +432,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 			}
 
 		} else {
-			persona.Causa = "El cupo del espacio no concuerda"
+			persona.Causa = "El cupo del espacio ya está vacío y no se pueden registrar más salidas"
 		}
 	}
 	return
@@ -463,7 +467,7 @@ func ConsultarCupo(id string) (cupo int, outputError map[string]interface{}) {
 	salidas, err := contarGet(beego.AppConfig.String("UrlCrudSeguimiento") + "seguimiento/?query=oikos_id:" + id + ",tipo_registro:S")
 	if err != nil {
 		logs.Error(err)
-		outputError = map[string]interface{}{"funcion": "/ConsultarAforo/contarSalidas", "err": err, "status": "502"}
+		outputError = map[string]interface{}{"funcion": "/ConsultarCupo/contarSalidas", "err": err, "status": "502"}
 		return 0, outputError
 	}
 	cupo = entradas - salidas
@@ -498,7 +502,7 @@ func ConsultarSintomas(idQr string) (sintomas bool, msg string, outputError map[
 func ConsultarVacuna(idQr string) (vacuna bool, msg string, outputError map[string]interface{}) {
 	var respuesta_peticion_vacuna []models.InfoComplementariaTercero
 	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?query=tercero_id:"+idQr+",InfoComplementariaId.GrupoInfoComplementariaId.CodigoAbreviacion:V&order=asc&sortby=InfoComplementariaId", &respuesta_peticion_vacuna); (err == nil) && (response == 200) {
-		if len(respuesta_peticion_vacuna) != 0 {
+		if respuesta_peticion_vacuna[0].Id != 0 {
 			layout := "2006-01-02T15:04:05.000Z"
 			var dato map[string]interface{}
 			json.Unmarshal([]byte(respuesta_peticion_vacuna[1].Dato), &dato)
@@ -544,7 +548,7 @@ func ConsultarComorbilidades(idQr string) (comorbilidad bool, msg string, output
 	var respuesta_peticion_comorbilidades []models.InfoComplementariaTercero
 	var dato map[string]interface{}
 	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?limit=-1&query=tercero_id:"+idQr+",InfoComplementariaId.GrupoInfoComplementariaId.Id:47", &respuesta_peticion_comorbilidades); (err == nil) && (response == 200) {
-		if len(respuesta_peticion_comorbilidades) > 0 {
+		if respuesta_peticion_comorbilidades[0].Id != 0 {
 			for _, info := range respuesta_peticion_comorbilidades {
 				json.Unmarshal([]byte(info.Dato), &dato)
 				if dato["dato"] == true {
