@@ -10,6 +10,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/udistrital/alternancia_mid/models"
+	"github.com/udistrital/utils_oas/time_bogota"
 )
 
 func Autorizacion(idQr string, idScan string, salon string, idEdificio string, idSede string, tipoScan string) (persona models.Persona, outputError map[string]interface{}) {
@@ -39,7 +40,8 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 			//var materiasDia []models.CargaAcademica
 			tercero := respuesta_peticion[0].TerceroId
 			persona.Nombre = tercero.NombreCompleto
-			persona.Fecha = time.Now().Format("2006-01-02 15:04")
+			persona.Fecha = time_bogota.Tiempo_bogota().Format("2006-01-02 15:04")
+			persona.Acceso = "No autorizado"
 
 			//Consulta de aforo
 			aforo, err1 := ConsultarAforo(id)
@@ -204,7 +206,6 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 					}
 				}
 			} else {
-				persona.Acceso = "No autorizado"
 				if comorbilidad && !vacuna {
 					persona.Causa = "Presenta comorbilidad(es) y no tiene vacunacion"
 				} else if sintomas {
@@ -277,7 +278,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?limit=-1&query=tercero_id:"+idPersona, &respuesta_peticion); (err == nil) && (response == 200) {
 		if len(respuesta_peticion) != 0 {
 			persona.Nombre = respuesta_peticion[0].TerceroId.NombreCompleto
-			persona.Fecha = time.Now().Format("2006-01-02 15:04")
+			persona.Fecha = time_bogota.Tiempo_bogota().Format("2006-01-02 15:04")
 		} else {
 			logs.Error("No hay datos de caracterización registrados para el usuario")
 			outputError = map[string]interface{}{"funcion": "/ActualizarAforo", "err": "No hay datos de caracterización registrados para el usuario", "status": "502"}
@@ -356,7 +357,6 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 					persona.Acceso = "Autorizado"
 					persona.Cupo--
 				} else {
-					persona.Acceso = "No autorizado"
 					persona.Causa = "Registro invalido, por favor asegurese de haber registrado todos los QR de entrada y salida"
 				}
 			} else if val {
@@ -372,7 +372,6 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 				return models.Persona{}, err
 			}
 		} else {
-			persona.Acceso = "No autorizado"
 			if cupo == aforo {
 				persona.Causa = "No hay cupo disponible en el espacio"
 			} else if comorbilidades {
@@ -392,7 +391,6 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 				persona.Acceso = "Autorizado"
 				persona.Cupo++
 			} else if !val {
-				persona.Acceso = "No autorizado"
 				persona.Causa = "Registro invalido, por favor asegurese de haber escaneado todos los QR de entrada y salida"
 				var res map[string]interface{}
 				var seguimiento []models.RegistroTraza
@@ -430,7 +428,6 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 			}
 
 		} else {
-			persona.Acceso = "No autorizado"
 			persona.Causa = "El cupo del espacio no concuerda"
 		}
 	}
