@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
@@ -45,6 +46,75 @@ func ConsultarTraza(idPersona string) (trazaRes models.TrazaEstudiante, outputEr
 	}
 
 	return traza, nil
+}
+
+func ContarIngresos(fecha string, espacioId string) (espacio map[string]interface{}, outputError map[string]interface{}) {
+	var res map[string]interface{}
+	var res_seguimiento []models.RegistroTraza
+	var list []models.EspacioFisico
+	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico/?limit=1&query=Id:"+espacioId, &list); status != 200 || err != nil {
+		logs.Error(err)
+		outputError = map[string]interface{}{"funcion": "/ContarIngresos/GetOikos/id:" + espacioId, "err": err, "responseStatus": status, "status": "502"}
+		return nil, outputError
+	}
+
+	espacioFisico := list[0]
+
+	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=0&query=oikos_id:"+espacioId+",tipo_registro:I&sortby=fecha_creacion&order=asc", &res); status != 200 || err != nil {
+		logs.Error(err)
+		outputError = map[string]interface{}{"funcion": "/ContarIngresos/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
+		return nil, outputError
+	}
+	LimpiezaRespuestaRefactor(res, &res_seguimiento)
+
+	cont := 0
+	for index, reg := range res_seguimiento {
+		if strings.Contains(reg.FechaCreacion, fecha) {
+			cont++
+			if index+1 < len(res_seguimiento) && !strings.Contains(res_seguimiento[index+1].FechaCreacion, fecha) {
+				break
+			}
+		}
+	}
+	espacio = map[string]interface{}{
+		"EspacioId": espacioFisico,
+		"Ingresos":  cont,
+	}
+	return
+}
+
+func IngresosPorSedes(fecha string) (conteoSedes map[string]interface{}, outputError map[string]interface{}) {
+	var sedes []models.EspacioFisico
+	conteoSedes = map[string]interface{}{}
+	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico/?limit=0&query=TipoEspacio.Id:1", &sedes); status != 200 || err != nil {
+		logs.Error(err)
+		outputError = map[string]interface{}{"funcion": "/IngresosPorSedes/GetOikos/", "err": err, "responseStatus": status, "status": "502"}
+		return nil, outputError
+	}
+
+	for _, espacioFisico := range sedes {
+		var res map[string]interface{}
+		var res_seguimiento []models.RegistroTraza
+
+		if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=0&query=oikos_id:"+strconv.Itoa(espacioFisico.Id)+",tipo_registro:I&sortby=fecha_creacion&order=asc", &res); status != 200 || err != nil {
+			logs.Error(err)
+			outputError = map[string]interface{}{"funcion": "/IngresosPorSedes/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
+			return nil, outputError
+		}
+		LimpiezaRespuestaRefactor(res, &res_seguimiento)
+
+		cont := 0
+		for index, reg := range res_seguimiento {
+			if strings.Contains(reg.FechaCreacion, fecha) {
+				cont++
+				if index+1 < len(res_seguimiento) && !strings.Contains(res_seguimiento[index+1].FechaCreacion, fecha) {
+					break
+				}
+			}
+		}
+		conteoSedes[espacioFisico.Nombre] = cont
+	}
+	return
 }
 
 func GenerarInformeTraza(idPersona string) (outputError map[string]interface{}) {
