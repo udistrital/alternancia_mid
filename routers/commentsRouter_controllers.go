@@ -27,8 +27,26 @@ func init() {
 
     beego.GlobalControllerRouter["github.com/udistrital/alternancia_mid/controllers:Control_datosController"] = append(beego.GlobalControllerRouter["github.com/udistrital/alternancia_mid/controllers:Control_datosController"],
         beego.ControllerComments{
+            Method: "IngresosSedes",
+            Router: `/:dia/:mes/:anio`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/udistrital/alternancia_mid/controllers:Control_datosController"] = append(beego.GlobalControllerRouter["github.com/udistrital/alternancia_mid/controllers:Control_datosController"],
+        beego.ControllerComments{
             Method: "GetTraza",
             Router: `/:id`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/udistrital/alternancia_mid/controllers:Control_datosController"] = append(beego.GlobalControllerRouter["github.com/udistrital/alternancia_mid/controllers:Control_datosController"],
+        beego.ControllerComments{
+            Method: "GetIngresos",
+            Router: `/:idEspacio/:fecha`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,

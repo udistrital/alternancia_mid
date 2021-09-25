@@ -88,6 +88,35 @@ paths:
             $ref: '#/definitions/models.Persona'
         "404":
           description: No found resource
+  /control_datos/{dia}/{mes}/{anio}:
+    get:
+      tags:
+      - control_datos
+      description: Devuelve la cantidad de ingresos de cada sede en la fecha indicada
+      operationId: Control_datosController.Ingresos por sede
+      parameters:
+      - in: path
+        name: dia
+        description: Día en formato DD
+        required: true
+        type: string
+      - in: path
+        name: mes
+        description: Mes en formato MM
+        required: true
+        type: string
+      - in: path
+        name: anio
+        description: Año en formato AAAA
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/map[string]interface{}'
+        "403":
+          description: fecha is empty
   /control_datos/{id}:
     get:
       tags:
@@ -110,9 +139,38 @@ paths:
               $ref: '#/definitions/models.TrazaEstudiante'
         "403":
           description: :id is empty
+  /control_datos/{idEspacio}/{fecha}:
+    get:
+      tags:
+      - control_datos
+      description: Devuelve la cantidad de ingresos que tuvo un espacio
+      operationId: Control_datosController.GetIngresos
+      parameters:
+      - in: path
+        name: idEspacio
+        description: Id del espacio
+        required: true
+        type: integer
+        format: int64
+      - in: path
+        name: fecha
+        description: Fecha de la que se quieren consultar los ingresos (AAAAMMDD)
+        required: true
+        type: integer
+        format: int64
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/map[string]interface{}'
+        "403":
+          description: :id is empty
 definitions:
-  3585.0xc0004c2060.false:
+  3585.0xc000471650.false:
     title: "false"
+    type: object
+  map[string]interface{}:
+    title: map[string]interface{}
     type: object
   models.Persona:
     title: Persona
@@ -138,7 +196,7 @@ definitions:
       Sedes:
         type: array
         items:
-          $ref: '#/definitions/3585.0xc0004c2060.false'
+          $ref: '#/definitions/3585.0xc000471650.false'
 tags:
 - name: acceso
   description: |
