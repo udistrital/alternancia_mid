@@ -34,7 +34,7 @@ func ConsultarTraza(idPersona string) (trazaRes models.TrazaEstudiante, outputEr
 	err := initPersona(idPersona)
 	if err != nil {
 		logs.Error(err)
-		outputError = map[string]interface{}{"funcion": "/GetTraza", "err": err, "status": "502"}
+		outputError = map[string]interface{}{"funcion": "/GetTraza/InitPersona", "err": err, "status": "502"}
 		return models.TrazaEstudiante{}, outputError
 	}
 
