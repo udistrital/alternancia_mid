@@ -219,6 +219,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 				} else if !clase {
 					persona.Causa = "No tiene clase en este momento"
 				} else if !validacion {
+					persona.Causa = "El registro del espacio es invalido, por favor asegurese de haber registrado todas las entradas y salidas"
 					var res map[string]interface{}
 					var seguimiento []models.RegistroTraza
 					if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=1&order=desc&sortby=fecha_creacion", &res); status != 200 || err != nil {
@@ -227,32 +228,33 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 						return models.Persona{}, outputError
 					}
 					LimpiezaRespuestaRefactor(res, &seguimiento)
-					ultimoReg := seguimiento[0]
-					ultimoEspacio, err := ConsultarEspacio(strconv.Itoa(ultimoReg.EspacioId))
-					if err != nil {
-						logs.Error(err)
-						outputError = map[string]interface{}{"funcion": "/ValidarFlujo/ConsultarEspacio", "err": err, "status": "502"}
-						return models.Persona{}, outputError
-					}
-					if ultimoReg.TipoEspacioId == 3 && ultimoReg.TipoEscaneo == "I" && ((tipoScan == "out" && espacioFisico.TipoEspacio.Id == 1) || (tipoScan == "in" && espacioFisico.TipoEspacio.Id > 2)) {
-						err := registrarFlujo(idQr, ultimoEspacio, "out")
+					if len(seguimiento) > 0 {
+						ultimoReg := seguimiento[0]
+						ultimoEspacio, err := ConsultarEspacio(strconv.Itoa(ultimoReg.EspacioId))
 						if err != nil {
 							logs.Error(err)
-							return models.Persona{}, err
+							outputError = map[string]interface{}{"funcion": "/ValidarFlujo/ConsultarEspacio", "err": err, "status": "502"}
+							return models.Persona{}, outputError
 						}
-						err = registrarFlujo(idQr, espacioFisico, tipoScan)
-						if err != nil {
-							logs.Error(err)
-							return models.Persona{}, err
+						if ultimoReg.TipoEspacioId == 3 && ultimoReg.TipoEscaneo == "I" && ((tipoScan == "out" && espacioFisico.TipoEspacio.Id == 1) || (tipoScan == "in" && espacioFisico.TipoEspacio.Id > 2)) {
+							err := registrarFlujo(idQr, ultimoEspacio, "out")
+							if err != nil {
+								logs.Error(err)
+								return models.Persona{}, err
+							}
+							err = registrarFlujo(idQr, espacioFisico, tipoScan)
+							if err != nil {
+								logs.Error(err)
+								return models.Persona{}, err
+							}
+							persona.Acceso = "Autorizado"
+							persona.Causa = ""
+							if tipoScan == "in" {
+								persona.Cupo = persona.Cupo - 1
+							} else if tipoScan == "out" {
+								persona.Cupo = persona.Cupo + 1
+							}
 						}
-						persona.Acceso = "Autorizado"
-						if tipoScan == "in" {
-							persona.Cupo = persona.Cupo - 1
-						} else if tipoScan == "out" {
-							persona.Cupo = persona.Cupo + 1
-						}
-					} else {
-						persona.Causa = "El registro del espacio es invalido, por favor asegurese de haber registrado todas las entradas y salidas"
 					}
 				}
 			}
@@ -331,6 +333,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 		if cupo < aforo && (vacuna || !comorbilidades) && !sintomas {
 			//Registro de salida automático
 			if val, err := validarFlujo(idPersona, espacioFisico, tipoQr); !val && err == nil {
+				persona.Causa = "Registro invalido, por favor asegurese de haber registrado todos los QR de entrada y salida"
 				//Get hacia el último registro de tipo entrada hacia un aula
 				var res map[string]interface{}
 				var seguimiento []models.RegistroTraza
@@ -340,29 +343,31 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 					return models.Persona{}, outputError
 				}
 				LimpiezaRespuestaRefactor(res, &seguimiento)
-				ultimoReg := seguimiento[0]
-				ultimoEspacio, err := ConsultarEspacio(strconv.Itoa(ultimoReg.EspacioId))
-				if err != nil {
-					logs.Error(err)
-					outputError = map[string]interface{}{"funcion": "/ValidarFlujo/ConsultarEspacio", "err": err, "status": "502"}
-					return models.Persona{}, outputError
-				}
-				if ultimoReg.TipoEspacioId == 3 && ultimoReg.TipoEscaneo == "I" && espacioFisico.TipoEspacio.Id > 2 {
-					err = registrarFlujo(idPersona, ultimoEspacio, "out")
+				if len(seguimiento) > 0 {
+					ultimoReg := seguimiento[0]
+					ultimoEspacio, err := ConsultarEspacio(strconv.Itoa(ultimoReg.EspacioId))
 					if err != nil {
 						logs.Error(err)
-						return models.Persona{}, err
+						outputError = map[string]interface{}{"funcion": "/ValidarFlujo/ConsultarEspacio", "err": err, "status": "502"}
+						return models.Persona{}, outputError
 					}
-					err = registrarFlujo(idPersona, espacioFisico, tipoQr)
-					if err != nil {
-						logs.Error(err)
-						return models.Persona{}, err
+					if ultimoReg.TipoEspacioId == 3 && ultimoReg.TipoEscaneo == "I" && espacioFisico.TipoEspacio.Id > 2 {
+						err = registrarFlujo(idPersona, ultimoEspacio, "out")
+						if err != nil {
+							logs.Error(err)
+							return models.Persona{}, err
+						}
+						err = registrarFlujo(idPersona, espacioFisico, tipoQr)
+						if err != nil {
+							logs.Error(err)
+							return models.Persona{}, err
+						}
+						persona.Acceso = "Autorizado"
+						persona.Causa = ""
+						persona.Cupo--
 					}
-					persona.Acceso = "Autorizado"
-					persona.Cupo--
-				} else {
-					persona.Causa = "Registro invalido, por favor asegurese de haber registrado todos los QR de entrada y salida"
 				}
+
 			} else if val {
 				err := registrarFlujo(idPersona, espacioFisico, tipoQr)
 				if err != nil {
@@ -404,27 +409,29 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 					return models.Persona{}, outputError
 				}
 				LimpiezaRespuestaRefactor(res, &seguimiento)
-				ultimoReg := seguimiento[0]
-				ultimoEspacio, err := ConsultarEspacio(strconv.Itoa(ultimoReg.EspacioId))
-				if err != nil {
-					logs.Error(err)
-					outputError = map[string]interface{}{"funcion": "/ValidarFlujo/ConsultarEspacio", "err": err, "status": "502"}
-					return models.Persona{}, outputError
-				}
-				if ultimoReg.TipoEspacioId == 3 && ultimoReg.TipoEscaneo == "I" && espacioFisico.TipoEspacio.Id == 1 {
-					err = registrarFlujo(idPersona, ultimoEspacio, "out")
+				if len(seguimiento) > 0 {
+					ultimoReg := seguimiento[0]
+					ultimoEspacio, err := ConsultarEspacio(strconv.Itoa(ultimoReg.EspacioId))
 					if err != nil {
 						logs.Error(err)
-						return models.Persona{}, err
+						outputError = map[string]interface{}{"funcion": "/ValidarFlujo/ConsultarEspacio", "err": err, "status": "502"}
+						return models.Persona{}, outputError
 					}
-					err = registrarFlujo(idPersona, espacioFisico, tipoQr)
-					if err != nil {
-						logs.Error(err)
-						return models.Persona{}, err
+					if ultimoReg.TipoEspacioId == 3 && ultimoReg.TipoEscaneo == "I" && espacioFisico.TipoEspacio.Id == 1 {
+						err = registrarFlujo(idPersona, ultimoEspacio, "out")
+						if err != nil {
+							logs.Error(err)
+							return models.Persona{}, err
+						}
+						err = registrarFlujo(idPersona, espacioFisico, tipoQr)
+						if err != nil {
+							logs.Error(err)
+							return models.Persona{}, err
+						}
+						persona.Acceso = "Autorizado"
+						persona.Causa = ""
+						persona.Cupo++
 					}
-					persona.Acceso = "Autorizado"
-					persona.Causa = ""
-					persona.Cupo++
 				}
 			} else {
 				logs.Error(err)
@@ -623,6 +630,6 @@ func validarFlujo(idTercero string, espacio models.EspacioFisico, tipo string) (
 		}
 		return (tipoReg == "I" && idEspReg == espacio.Id) || (tipoEsp < seguimiento[0].TipoEspacioId && tipoReg == "S"), nil
 	} else {
-		return true, nil
+		return espacio.TipoEspacio.Id == 1, nil
 	}
 }
