@@ -593,8 +593,8 @@ func registrarFlujo(idTercero string, espacio models.EspacioFisico, tipo string)
 		TipoEspacioId:     tipoEsp,
 		TipoEscaneo:       tipoS,
 		Activo:            true,
-		FechaCreacion:     time.Now().Format("2006-01-02T15:04:05.000Z"),
-		FechaModificacion: time.Now().Format("2006-01-02T15:04:05.000Z"),
+		FechaCreacion:     time_bogota.Tiempo_bogota().Format("2006-01-02T15:04:05.000Z"),
+		FechaModificacion: time_bogota.Tiempo_bogota().Format("2006-01-02T15:04:05.000Z"),
 	}
 	var res map[string]interface{}
 	if err := SendJson(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento", "POST", &res, body); err != nil {
