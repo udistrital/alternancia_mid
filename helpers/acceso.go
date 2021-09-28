@@ -222,7 +222,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 					persona.Causa = "El registro del espacio es invalido, por favor asegurese de haber registrado todas las entradas y salidas"
 					var res map[string]interface{}
 					var seguimiento []models.RegistroTraza
-					if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=1&order=desc&sortby=fecha_creacion", &res); status != 200 || err != nil {
+					if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=1&order=desc&sortby=fecha_creacion&query=tercero_id:"+idQr, &res); status != 200 || err != nil {
 						logs.Error(err)
 						outputError = map[string]interface{}{"funcion": "/ValidarFlujo/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
 						return models.Persona{}, outputError
@@ -302,6 +302,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 	}
 	persona.Cupo = aforo - cupo
 	persona.Acceso = "No autorizado"
+
 	if tipoQr == "in" {
 		comorbilidades, msg, err := ConsultarComorbilidades(idPersona)
 		if err != nil {
@@ -334,10 +335,9 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 			//Registro de salida automático
 			if val, err := validarFlujo(idPersona, espacioFisico, tipoQr); !val && err == nil {
 				persona.Causa = "Registro invalido, por favor asegurese de haber registrado todos los QR de entrada y salida"
-				//Get hacia el último registro de tipo entrada hacia un aula
 				var res map[string]interface{}
 				var seguimiento []models.RegistroTraza
-				if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=1&order=desc&sortby=fecha_creacion", &res); status != 200 || err != nil {
+				if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=1&order=desc&sortby=fecha_creacion&query=tercero_id:"+idPersona, &res); status != 200 || err != nil {
 					logs.Error(err)
 					outputError = map[string]interface{}{"funcion": "/ValidarFlujo/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
 					return models.Persona{}, outputError
@@ -403,7 +403,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 				persona.Causa = "Registro invalido, por favor asegurese de haber escaneado todos los QR de entrada y salida"
 				var res map[string]interface{}
 				var seguimiento []models.RegistroTraza
-				if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=1&order=desc&sortby=fecha_creacion", &res); status != 200 || err != nil {
+				if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=1&order=desc&sortby=fecha_creacion&query=tercero_id:"+idPersona, &res); status != 200 || err != nil {
 					logs.Error(err)
 					outputError = map[string]interface{}{"funcion": "/ValidarFlujo/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
 					return models.Persona{}, outputError
@@ -630,6 +630,6 @@ func validarFlujo(idTercero string, espacio models.EspacioFisico, tipo string) (
 		}
 		return (tipoReg == "I" && idEspReg == espacio.Id) || (tipoEsp < seguimiento[0].TipoEspacioId && tipoReg == "S"), nil
 	} else {
-		return espacio.TipoEspacio.Id == 1, nil
+		return espacio.TipoEspacio.Id == 1 && tipo == "in", nil
 	}
 }
