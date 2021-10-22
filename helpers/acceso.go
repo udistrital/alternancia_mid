@@ -61,18 +61,14 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 			persona.Cupo = aforo - cupo
 
 			//Consulta de comorbilidades
-			comorbilidad, msg, err1 := ConsultarComorbilidades(strconv.Itoa(tercero.Id))
+			comorbilidad, err1 = ConsultarComorbilidades(strconv.Itoa(tercero.Id))
 			if err1 != nil {
 				logs.Error(err1)
 				return models.Persona{}, err1
 			}
-			if msg != "" {
-				persona.Causa = msg
-				return
-			}
 
 			//Consulta de vacunacion
-			vacuna, msg, err1 = ConsultarVacuna(strconv.Itoa(tercero.Id))
+			vacuna, msg, err1 := ConsultarVacuna(strconv.Itoa(tercero.Id))
 			if err1 != nil {
 				logs.Error(err1)
 				return models.Persona{}, err1
@@ -304,14 +300,10 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 	persona.Acceso = "No autorizado"
 
 	if tipoQr == "in" {
-		comorbilidades, msg, err := ConsultarComorbilidades(idPersona)
+		comorbilidades, err := ConsultarComorbilidades(idPersona)
 		if err != nil {
 			logs.Error(err)
 			return models.Persona{}, err
-		}
-		if msg != "" {
-			persona.Causa = msg
-			return
 		}
 		vacuna, msg, err := ConsultarVacuna(idPersona)
 		if err != nil {
@@ -551,7 +543,7 @@ func ConsultarEspacio(idEspacio string) (espacioFisico models.EspacioFisico, out
 	return list[0], outputError
 }
 
-func ConsultarComorbilidades(idQr string) (comorbilidad bool, msg string, outputError map[string]interface{}) {
+func ConsultarComorbilidades(idQr string) (comorbilidad bool, outputError map[string]interface{}) {
 	var respuesta_peticion_comorbilidades []models.InfoComplementariaTercero
 	var dato map[string]interface{}
 	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?limit=-1&query=tercero_id:"+idQr+",InfoComplementariaId.GrupoInfoComplementariaId.Id:47", &respuesta_peticion_comorbilidades); (err == nil) && (response == 200) {
@@ -562,13 +554,11 @@ func ConsultarComorbilidades(idQr string) (comorbilidad bool, msg string, output
 					comorbilidad = true
 				}
 			}
-		} else {
-			msg = "No se encontró información de comorbilidades registrada"
 		}
 	} else {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/ConsultarComorbilidades", "err": err, "status": "502"}
-		return false, "", outputError
+		return false, outputError
 	}
 	return
 }
