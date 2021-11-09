@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/udistrital/alternancia_mid/helpers"
-	"github.com/udistrital/alternancia_mid/models"
 	_ "github.com/udistrital/alternancia_mid/routers"
 
 	"github.com/astaxie/beego"
@@ -30,11 +29,7 @@ func TestConsultarAforo(t *testing.T) {
 }
 
 func TestConsultarCupo(t *testing.T) {
-	cupo := models.EspacioFisicoCampo{
-		Id:    0,
-		Valor: "",
-	}
-	err := helpers.ConsultarCupo("1096", &cupo)
+	_, err := helpers.ConsultarCupo("1096")
 	if err != nil {
 		t.Error("La consulta de cupo ha dado error")
 		t.Error(err)
@@ -45,7 +40,7 @@ func TestConsultarCupo(t *testing.T) {
 }
 
 func TestConsultarSintomas(t *testing.T) {
-	if _, err := helpers.ConsultarSintomas("9851"); err != nil {
+	if _, _, err := helpers.ConsultarSintomas("9851"); err != nil {
 		t.Error("La consulta de sintomas ha dado error")
 		t.Error(err)
 		t.Fail()
@@ -55,7 +50,7 @@ func TestConsultarSintomas(t *testing.T) {
 }
 
 func TestConsultarVacuna(t *testing.T) {
-	if _, err := helpers.ConsultarVacuna("9851"); err != nil {
+	if _, _, err := helpers.ConsultarVacuna("9851"); err != nil {
 		t.Error("La consulta de vacunacion ha dado error")
 		t.Error(err)
 		t.Fail()
