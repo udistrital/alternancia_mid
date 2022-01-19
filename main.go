@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "github.com/udistrital/alternancia_mid/routers"
+	"github.com/udistrital/auditoria"
 	"github.com/udistrital/utils_oas/customerrorv2"
 
 	"github.com/astaxie/beego"
@@ -34,5 +35,6 @@ func main() {
 	}))
 	beego.ErrorController(&customerrorv2.CustomErrorController{})
 	apistatus.Init()
+	auditoria.InitMiddleware()
 	beego.Run()
 }
