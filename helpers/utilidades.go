@@ -68,6 +68,7 @@ func contarGet(url string) (conteo int, err error) {
 }*/
 
 func LimpiezaRespuestaRefactor(respuesta map[string]interface{}, v interface{}) {
+	logs.Error("ingreso a LimpiezaRespuestaRefactor: ", respuesta)
 	b, err := json.Marshal(respuesta["Data"])
 	if err != nil {
 		panic(err)

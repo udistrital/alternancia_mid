@@ -166,7 +166,7 @@ paths:
         "403":
           description: :id is empty
 definitions:
-  3585.0xc000471650.false:
+  3585.0xc00041db30.false:
     title: "false"
     type: object
   map[string]interface{}:
@@ -196,7 +196,7 @@ definitions:
       Sedes:
         type: array
         items:
-          $ref: '#/definitions/3585.0xc000471650.false'
+          $ref: '#/definitions/3585.0xc00041db30.false'
 tags:
 - name: acceso
   description: |
