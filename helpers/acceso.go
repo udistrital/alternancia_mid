@@ -14,7 +14,7 @@ import (
 )
 
 func Autorizacion(idQr string, idScan string, salon string, idEdificio string, idSede string, tipoScan string) (persona models.Persona, outputError map[string]interface{}) {
-
+	logs.Error("ingreso a autorizacion")
 	var respuesta_peticion []models.InfoComplementariaTercero
 
 	defer func() {
@@ -23,6 +23,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 			panic(outputError)
 		}
 	}()
+	logs.Error(beego.AppConfig.String("UrlCrudTerceros") + "info_complementaria_tercero/?limit=-1&query=tercero_id:" + idQr)
 	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?limit=-1&query=tercero_id:"+idQr, &respuesta_peticion); (err == nil) && (response == 200) {
 		if len(respuesta_peticion) != 0 {
 
@@ -35,6 +36,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 			var clase bool
 			var aforo int
 			var cupo int
+			var validacion bool
 			id := idSede
 			var idRol int
 			//var materiasDia []models.CargaAcademica
@@ -61,34 +63,34 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 			persona.Cupo = aforo - cupo
 
 			//Consulta de comorbilidades
-			comorbilidad, err1 = ConsultarComorbilidades(strconv.Itoa(tercero.Id))
-			if err1 != nil {
-				logs.Error(err1)
-				return models.Persona{}, err1
-			}
+			/*
+				comorbilidad, err1 = ConsultarComorbilidades(strconv.Itoa(tercero.Id))
+				if err1 != nil {
+					logs.Error(err1)
+					return models.Persona{}, err1
+				}
 
-			//Consulta de vacunacion
-			vacuna, msg, err1 := ConsultarVacuna(strconv.Itoa(tercero.Id))
-			if err1 != nil {
-				logs.Error(err1)
-				return models.Persona{}, err1
-			}
-			if msg != "" {
-				persona.Causa = msg
-				return
-			}
+				//Consulta de vacunacion
+				vacuna, msg, err1 := ConsultarVacuna(strconv.Itoa(tercero.Id))
+				if err1 != nil {
+					logs.Error(err1)
+					return models.Persona{}, err1
+				}
+				if msg != "" {
+					persona.Causa = msg
+					return
+				}
 
-			//Consulta de sintomas
-			sintomas, msg, err1 = ConsultarSintomas(strconv.Itoa(tercero.Id))
-			if err1 != nil {
-				logs.Error(err1)
-				return models.Persona{}, err1
-			}
-			if msg != "" {
-				persona.Causa = msg
-				return
-			}
-
+				//Consulta de sintomas
+				sintomas, msg, err1 = ConsultarSintomas(strconv.Itoa(tercero.Id))
+				if err1 != nil {
+					logs.Error(err1)
+					return models.Persona{}, err1
+				}
+				if msg != "" {
+					persona.Causa = msg
+					return
+				}*/
 			if idEdificio != "" {
 				id = idEdificio
 			}
@@ -132,7 +134,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 				outputError = map[string]interface{}{"funcion": "/Autorizacion", "err": err, "status": "502"}
 				return models.Persona{}, outputError
 			}
-
+			logs.Error("persona.Cupo: ", persona.Cupo)
 			if tipoScan == "in" {
 				cupoDisponible = persona.Cupo > 0
 			} else if tipoScan == "out" {
@@ -141,6 +143,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 
 			//Consulta de roles para conceder permisos
 			var respuesta_peticion_permisos []models.Vinculacion
+			logs.Error(beego.AppConfig.String("UrlCrudTerceros") + "vinculacion/?query=Activo:true,TerceroPrincipalId.Id:" + idScan)
 			if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"vinculacion/?query=Activo:true,TerceroPrincipalId.Id:"+idScan, &respuesta_peticion_permisos); (err == nil) && (response == 200) {
 				for _, vinculacion := range respuesta_peticion_permisos {
 					idRol = vinculacion.TipoVinculacionId
@@ -173,7 +176,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 				}
 			}*/
 			clase = true
-
+			vacuna = true
 			espacioFisico, err := ConsultarEspacio(id)
 			if err != nil {
 				logs.Error(err)
@@ -181,13 +184,19 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 			}
 
 			//Rellenado de modelo persona
-			validacion, err := validarFlujo(idQr, espacioFisico, tipoScan)
+			logs.Error(idQr, espacioFisico, tipoScan)
+			validacion = true
+			//validacion, err := validarFlujo(idQr, espacioFisico, tipoScan)
+			//logs.Error("validacion: ", validacion)
+			logs.Error("err: ", err)
 			if err != nil {
 				logs.Error(err)
 				outputError = map[string]interface{}{"funcion": "/Autorizacion", "err": err, "status": "502"}
 				return models.Persona{}, outputError
 			}
+			logs.Error("validacion: ", validacion, "vacuna: ", vacuna, "comorbilidad: ", comorbilidad, "sintomas: ", sintomas, "cupoDisponible: ", cupoDisponible, "clase: ", clase, "permiso: ", permiso)
 			if (vacuna || !comorbilidad) && !sintomas && cupoDisponible && clase && validacion {
+				logs.Error("ingreso a autorizado")
 				persona.Acceso = "Autorizado"
 				if permiso {
 					err := registrarFlujo(idQr, espacioFisico, tipoScan)
@@ -202,6 +211,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 					}
 				}
 			} else {
+				logs.Error("ingreso a invalido")
 				if comorbilidad && !vacuna {
 					persona.Causa = "Presenta comorbilidades y no tiene vacunación completada hace más de 15 dias"
 				} else if sintomas {
@@ -232,7 +242,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 							outputError = map[string]interface{}{"funcion": "/ValidarFlujo/ConsultarEspacio", "err": err, "status": "502"}
 							return models.Persona{}, outputError
 						}
-						if ultimoReg.TipoEspacioId == 3 && ultimoReg.TipoEscaneo == "I" && ((tipoScan == "out" && espacioFisico.TipoEspacio.Id == 1) || (tipoScan == "in" && espacioFisico.TipoEspacio.Id > 2)) {
+						if ultimoReg.TipoEspacioId == 3 && ultimoReg.TipoEscaneo == "I" && ((tipoScan == "out" && espacioFisico.TipoEspacioFisicoId.Id == 1) || (tipoScan == "in" && espacioFisico.TipoEspacioFisicoId.Id > 2)) {
 							err := registrarFlujo(idQr, ultimoEspacio, "out")
 							if err != nil {
 								logs.Error(err)
@@ -269,6 +279,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 }
 
 func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona models.Persona, outputError map[string]interface{}) {
+	logs.Error("ingreso a ActualizarAforo")
 	cupo, _ := ConsultarCupo(idEspacio)
 	var respuesta_peticion []models.InfoComplementariaTercero
 	espacioFisico, err := ConsultarEspacio(idEspacio)
@@ -300,7 +311,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 	persona.Acceso = "No autorizado"
 
 	if tipoQr == "in" {
-		comorbilidades, err := ConsultarComorbilidades(idPersona)
+		/*comorbilidades, err := ConsultarComorbilidades(idPersona)
 		if err != nil {
 			logs.Error(err)
 			return models.Persona{}, err
@@ -322,7 +333,10 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 		if msg != "" {
 			persona.Causa = msg
 			return
-		}
+		}*/
+		vacuna := true
+		comorbilidades := false
+		sintomas := false
 		if cupo < aforo && (vacuna || !comorbilidades) && !sintomas {
 			//Registro de salida automático
 			if val, err := validarFlujo(idPersona, espacioFisico, tipoQr); !val && err == nil {
@@ -343,7 +357,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 						outputError = map[string]interface{}{"funcion": "/ValidarFlujo/ConsultarEspacio", "err": err, "status": "502"}
 						return models.Persona{}, outputError
 					}
-					if ultimoReg.TipoEspacioId == 3 && ultimoReg.TipoEscaneo == "I" && espacioFisico.TipoEspacio.Id > 2 {
+					if ultimoReg.TipoEspacioId == 3 && ultimoReg.TipoEscaneo == "I" && espacioFisico.TipoEspacioFisicoId.Id > 2 {
 						err = registrarFlujo(idPersona, ultimoEspacio, "out")
 						if err != nil {
 							logs.Error(err)
@@ -409,7 +423,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 						outputError = map[string]interface{}{"funcion": "/ValidarFlujo/ConsultarEspacio", "err": err, "status": "502"}
 						return models.Persona{}, outputError
 					}
-					if ultimoReg.TipoEspacioId == 3 && ultimoReg.TipoEscaneo == "I" && espacioFisico.TipoEspacio.Id == 1 {
+					if ultimoReg.TipoEspacioId == 3 && ultimoReg.TipoEscaneo == "I" && espacioFisico.TipoEspacioFisicoId.Id == 1 {
 						err = registrarFlujo(idPersona, ultimoEspacio, "out")
 						if err != nil {
 							logs.Error(err)
@@ -438,9 +452,12 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 }
 
 func ConsultarAforo(id string) (aforo int, outputError map[string]interface{}) {
+	logs.Error("ingreso a ConsultarAforo")
 	var respuesta_peticion_aforo []models.EspacioFisicoCampo
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=Campo.Id:5,EspacioFisico.Id:"+id, &respuesta_peticion_aforo); (err == nil) && (response == 200) {
+	logs.Error(beego.AppConfig.String("UrlCrudOikos") + "espacio_fisico_campo/?query=CampoId.Id:5,EspacioFisicoId.Id:" + id)
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=CampoId.Id:5,EspacioFisicoId:"+id, &respuesta_peticion_aforo); (err == nil) && (response == 200) {
 		if len(respuesta_peticion_aforo) != 0 {
+			logs.Error("aforo: ", respuesta_peticion_aforo[0].Valor)
 			aforoStr := respuesta_peticion_aforo[0].Valor
 			aforo, _ = strconv.Atoi(aforoStr)
 		} else {
@@ -456,20 +473,25 @@ func ConsultarAforo(id string) (aforo int, outputError map[string]interface{}) {
 }
 
 func ConsultarCupo(id string) (cupo int, outputError map[string]interface{}) {
-
+	logs.Error("ingreso a ConsultarCupo")
+	logs.Error(beego.AppConfig.String("UrlCrudSeguimiento") + "seguimiento/?query=oikos_id:" + id + ",tipo_registro:I")
 	entradas, err := contarGet(beego.AppConfig.String("UrlCrudSeguimiento") + "seguimiento/?query=oikos_id:" + id + ",tipo_registro:I")
 	if err != nil {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/ConsultarCupo/contarEntradas", "err": err, "status": "502"}
 		return 0, outputError
 	}
+	logs.Error("entradas: ", entradas)
+	logs.Error(beego.AppConfig.String("UrlCrudSeguimiento") + "seguimiento/?query=oikos_id:" + id + ",tipo_registro:S")
 	salidas, err := contarGet(beego.AppConfig.String("UrlCrudSeguimiento") + "seguimiento/?query=oikos_id:" + id + ",tipo_registro:S")
 	if err != nil {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/ConsultarCupo/contarSalidas", "err": err, "status": "502"}
 		return 0, outputError
 	}
+	logs.Error("salidas: ", salidas)
 	cupo = entradas - salidas
+	logs.Error("cupo: ", cupo)
 	return
 }
 
@@ -533,7 +555,9 @@ func ConsultarVacuna(idQr string) (vacuna bool, msg string, outputError map[stri
 }
 
 func ConsultarEspacio(idEspacio string) (espacioFisico models.EspacioFisico, outputError map[string]interface{}) {
+	logs.Error("ingreso a ConsultarEspacio")
 	var list []models.EspacioFisico
+	logs.Error(beego.AppConfig.String("UrlCrudOikos") + "espacio_fisico/?limit=1&query=Id:" + idEspacio)
 	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico/?limit=1&query=Id:"+idEspacio, &list); (err != nil) || (response != 200) {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/ConsultaEspacio", "err": err, "status": "502"}
@@ -564,19 +588,26 @@ func ConsultarComorbilidades(idQr string) (comorbilidad bool, outputError map[st
 }
 
 func registrarFlujo(idTercero string, espacio models.EspacioFisico, tipo string) (outputError map[string]interface{}) {
+	logs.Error("ingreso a registrarFlujo")
+
 	idTInt, _ := strconv.Atoi(idTercero)
 	var tipoS string
+
 	if tipo == "in" {
 		tipoS = "I"
 	} else {
 		tipoS = "S"
 	}
+	logs.Error("tipoS: ", tipoS)
 	var tipoEsp int
-	if espacio.TipoEspacio.Id == 1 || espacio.TipoEspacio.Id == 2 {
-		tipoEsp = espacio.TipoEspacio.Id
+	logs.Error("Espacio", espacio)
+	if espacio.TipoEspacioFisicoId.Id == 1 || espacio.TipoEspacioFisicoId.Id == 2 {
+		tipoEsp = espacio.TipoEspacioFisicoId.Id
 	} else {
 		tipoEsp = 3
 	}
+	logs.Error("tipoEsp: ", tipoEsp)
+
 	var body = models.RegistroTraza{
 		TerceroId:         idTInt,
 		EspacioId:         espacio.Id,
@@ -586,7 +617,10 @@ func registrarFlujo(idTercero string, espacio models.EspacioFisico, tipo string)
 		FechaCreacion:     time_bogota.Tiempo_bogota().Format("2006-01-02T15:04:05.000Z"),
 		FechaModificacion: time_bogota.Tiempo_bogota().Format("2006-01-02T15:04:05.000Z"),
 	}
+
 	var res map[string]interface{}
+	logs.Error("body: ", body)
+	logs.Error(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento", body)
 	if err := SendJson(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento", "POST", &res, body); err != nil {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/registrarFlujo/PostSeguimiento", "resStatus": res["status"], "err": err, "status": "502"}
@@ -596,22 +630,26 @@ func registrarFlujo(idTercero string, espacio models.EspacioFisico, tipo string)
 }
 
 func validarFlujo(idTercero string, espacio models.EspacioFisico, tipo string) (validacion bool, outputError map[string]interface{}) {
+	logs.Error("ingreso a validarFlujo")
 	//get del nuevo api que traiga el último registro del tipo de espacio
 	var res map[string]interface{}
 	var seguimiento []models.RegistroTraza
+	logs.Error(beego.AppConfig.String("UrlCrudSeguimiento") + "seguimiento/?limit=1&query=tercero_id:" + idTercero + "&order=desc&sortby=fecha_creacion")
 	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=1&query=tercero_id:"+idTercero+"&order=desc&sortby=fecha_creacion", &res); status != 200 || err != nil {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/ValidarFlujo/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
 		return false, outputError
 	}
 	LimpiezaRespuestaRefactor(res, &seguimiento)
+	logs.Error("seguimiento: ", seguimiento)
 	if len(seguimiento) != 0 {
+		logs.Error("hay registros de seguimiento para el usuario")
 		regSeguimiento := seguimiento[0]
 		tipoReg := regSeguimiento.TipoEscaneo
 		idEspReg := regSeguimiento.EspacioId
 		var tipoEsp int
-		if espacio.TipoEspacio.Id == 1 || espacio.TipoEspacio.Id == 2 {
-			tipoEsp = espacio.TipoEspacio.Id
+		if espacio.TipoEspacioFisicoId.Id == 1 || espacio.TipoEspacioFisicoId.Id == 2 {
+			tipoEsp = espacio.TipoEspacioFisicoId.Id
 		} else {
 			tipoEsp = 3
 		}
@@ -620,6 +658,7 @@ func validarFlujo(idTercero string, espacio models.EspacioFisico, tipo string) (
 		}
 		return (tipoReg == "I" && idEspReg == espacio.Id) || (tipoEsp < seguimiento[0].TipoEspacioId && tipoReg == "S"), nil
 	} else {
-		return espacio.TipoEspacio.Id == 1 && tipo == "in", nil
+		logs.Error("No hay registros de seguimiento para el usuario, se asume que es la primera vez que ingresa")
+		return espacio.TipoEspacioFisicoId.Id == 1 && tipo == "in", nil
 	}
 }
