@@ -23,8 +23,8 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 			panic(outputError)
 		}
 	}()
-	logs.Error(beego.AppConfig.String("UrlCrudTerceros") + "info_complementaria_tercero/?limit=-1&query=tercero_id:" + idQr)
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?limit=-1&query=tercero_id:"+idQr, &respuesta_peticion); (err == nil) && (response == 200) {
+	logs.Error(beego.AppConfig.String("UrlCrudTerceros") + "/info_complementaria_tercero/?limit=-1&query=tercero_id:" + idQr)
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"/info_complementaria_tercero/?limit=-1&query=tercero_id:"+idQr, &respuesta_peticion); (err == nil) && (response == 200) {
 		if len(respuesta_peticion) != 0 {
 
 			//Declaracion de variables a usar
@@ -99,7 +99,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 				var respuesta_peticion_salones []models.EspacioFisicoPadre
 				salon = strings.ToUpper(salon)
 				coincidencias := 0
-				if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_padre/?limit=-1&query=Padre.Id:"+idEdificio, &respuesta_peticion_salones); (err == nil) && (response == 200) {
+				if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"/espacio_fisico_padre/?limit=-1&query=Padre.Id:"+idEdificio, &respuesta_peticion_salones); (err == nil) && (response == 200) {
 					if len(respuesta_peticion_salones) > 0 {
 						for _, espacio := range respuesta_peticion_salones {
 							hijo := espacio.Hijo
@@ -143,8 +143,8 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 
 			//Consulta de roles para conceder permisos
 			var respuesta_peticion_permisos []models.Vinculacion
-			logs.Error(beego.AppConfig.String("UrlCrudTerceros") + "vinculacion/?query=Activo:true,TerceroPrincipalId.Id:" + idScan)
-			if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"vinculacion/?query=Activo:true,TerceroPrincipalId.Id:"+idScan, &respuesta_peticion_permisos); (err == nil) && (response == 200) {
+			logs.Error(beego.AppConfig.String("UrlCrudTerceros") + "/vinculacion/?query=Activo:true,TerceroPrincipalId.Id:" + idScan)
+			if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"/vinculacion/?query=Activo:true,TerceroPrincipalId.Id:"+idScan, &respuesta_peticion_permisos); (err == nil) && (response == 200) {
 				for _, vinculacion := range respuesta_peticion_permisos {
 					idRol = vinculacion.TipoVinculacionId
 					if idRol == 377 || idRol == 292 || idRol == 294 || (idRol >= 296 && idRol <= 299) {
@@ -228,7 +228,7 @@ func Autorizacion(idQr string, idScan string, salon string, idEdificio string, i
 					persona.Causa = "El registro del espacio es invalido, por favor asegurese de haber registrado todas las entradas y salidas"
 					var res map[string]interface{}
 					var seguimiento []models.RegistroTraza
-					if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=1&order=desc&sortby=fecha_creacion&query=tercero_id:"+idQr, &res); status != 200 || err != nil {
+					if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"/seguimiento/?limit=1&order=desc&sortby=fecha_creacion&query=tercero_id:"+idQr, &res); status != 200 || err != nil {
 						logs.Error(err)
 						outputError = map[string]interface{}{"funcion": "/ValidarFlujo/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
 						return models.Persona{}, outputError
@@ -288,7 +288,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 		outputError = map[string]interface{}{"funcion": "/ActualizarAforo", "err": err, "status": "502"}
 		return models.Persona{}, outputError
 	}
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?limit=-1&query=tercero_id:"+idPersona, &respuesta_peticion); (err == nil) && (response == 200) {
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"/info_complementaria_tercero/?limit=-1&query=tercero_id:"+idPersona, &respuesta_peticion); (err == nil) && (response == 200) {
 		if len(respuesta_peticion) != 0 {
 			persona.Nombre = respuesta_peticion[0].TerceroId.NombreCompleto
 			persona.Fecha = time_bogota.Tiempo_bogota().Format("2006-01-02 15:04")
@@ -343,7 +343,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 				persona.Causa = "Registro invalido, por favor asegurese de haber registrado todos los QR de entrada y salida"
 				var res map[string]interface{}
 				var seguimiento []models.RegistroTraza
-				if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=1&order=desc&sortby=fecha_creacion&query=tercero_id:"+idPersona, &res); status != 200 || err != nil {
+				if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"/seguimiento/?limit=1&order=desc&sortby=fecha_creacion&query=tercero_id:"+idPersona, &res); status != 200 || err != nil {
 					logs.Error(err)
 					outputError = map[string]interface{}{"funcion": "/ValidarFlujo/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
 					return models.Persona{}, outputError
@@ -409,7 +409,7 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 				persona.Causa = "Registro invalido, por favor asegurese de haber escaneado todos los QR de entrada y salida"
 				var res map[string]interface{}
 				var seguimiento []models.RegistroTraza
-				if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=1&order=desc&sortby=fecha_creacion&query=tercero_id:"+idPersona, &res); status != 200 || err != nil {
+				if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"/seguimiento/?limit=1&order=desc&sortby=fecha_creacion&query=tercero_id:"+idPersona, &res); status != 200 || err != nil {
 					logs.Error(err)
 					outputError = map[string]interface{}{"funcion": "/ValidarFlujo/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
 					return models.Persona{}, outputError
@@ -454,8 +454,8 @@ func ActualizarAforo(idPersona string, idEspacio string, tipoQr string) (persona
 func ConsultarAforo(id string) (aforo int, outputError map[string]interface{}) {
 	logs.Error("ingreso a ConsultarAforo")
 	var respuesta_peticion_aforo []models.EspacioFisicoCampo
-	logs.Error(beego.AppConfig.String("UrlCrudOikos") + "espacio_fisico_campo/?query=CampoId.Id:5,EspacioFisicoId.Id:" + id)
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico_campo/?query=CampoId.Id:5,EspacioFisicoId:"+id, &respuesta_peticion_aforo); (err == nil) && (response == 200) {
+	logs.Error(beego.AppConfig.String("UrlCrudOikos") + "/espacio_fisico_campo/?query=CampoId.Id:5,EspacioFisicoId.Id:" + id)
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"/espacio_fisico_campo/?query=CampoId.Id:5,EspacioFisicoId:"+id, &respuesta_peticion_aforo); (err == nil) && (response == 200) {
 		if len(respuesta_peticion_aforo) != 0 {
 			logs.Error("aforo: ", respuesta_peticion_aforo[0].Valor)
 			aforoStr := respuesta_peticion_aforo[0].Valor
@@ -474,16 +474,16 @@ func ConsultarAforo(id string) (aforo int, outputError map[string]interface{}) {
 
 func ConsultarCupo(id string) (cupo int, outputError map[string]interface{}) {
 	logs.Error("ingreso a ConsultarCupo")
-	logs.Error(beego.AppConfig.String("UrlCrudSeguimiento") + "seguimiento/?query=oikos_id:" + id + ",tipo_registro:I")
-	entradas, err := contarGet(beego.AppConfig.String("UrlCrudSeguimiento") + "seguimiento/?query=oikos_id:" + id + ",tipo_registro:I")
+	logs.Error(beego.AppConfig.String("UrlCrudSeguimiento") + "/seguimiento/?query=oikos_id:" + id + ",tipo_registro:I")
+	entradas, err := contarGet(beego.AppConfig.String("UrlCrudSeguimiento") + "/seguimiento/?query=oikos_id:" + id + ",tipo_registro:I")
 	if err != nil {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/ConsultarCupo/contarEntradas", "err": err, "status": "502"}
 		return 0, outputError
 	}
 	logs.Error("entradas: ", entradas)
-	logs.Error(beego.AppConfig.String("UrlCrudSeguimiento") + "seguimiento/?query=oikos_id:" + id + ",tipo_registro:S")
-	salidas, err := contarGet(beego.AppConfig.String("UrlCrudSeguimiento") + "seguimiento/?query=oikos_id:" + id + ",tipo_registro:S")
+	logs.Error(beego.AppConfig.String("UrlCrudSeguimiento") + "/seguimiento/?query=oikos_id:" + id + ",tipo_registro:S")
+	salidas, err := contarGet(beego.AppConfig.String("UrlCrudSeguimiento") + "/seguimiento/?query=oikos_id:" + id + ",tipo_registro:S")
 	if err != nil {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/ConsultarCupo/contarSalidas", "err": err, "status": "502"}
@@ -498,7 +498,7 @@ func ConsultarCupo(id string) (cupo int, outputError map[string]interface{}) {
 func ConsultarSintomas(idQr string) (sintomas bool, msg string, outputError map[string]interface{}) {
 	var respuesta_peticion_sintomas map[string]interface{}
 	var sintoma []models.Sintomas
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudSintomas")+"sintomas?limit=1&order=desc&sortby=fecha_creacion&query=terceroId:"+idQr, &respuesta_peticion_sintomas); (err == nil) && (response == 200) {
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudSintomas")+"/sintomas?limit=1&order=desc&sortby=fecha_creacion&query=terceroId:"+idQr, &respuesta_peticion_sintomas); (err == nil) && (response == 200) {
 		LimpiezaRespuestaRefactor(respuesta_peticion_sintomas, &sintoma)
 		if len(sintoma) != 0 && strings.Contains(sintoma[0].FechaCreacion, time.Now().UTC().Format("2006-01-02T")) {
 			sintomasRegistrados := sintoma[0].InfoSalud
@@ -522,7 +522,7 @@ func ConsultarSintomas(idQr string) (sintomas bool, msg string, outputError map[
 
 func ConsultarVacuna(idQr string) (vacuna bool, msg string, outputError map[string]interface{}) {
 	var respuesta_peticion_vacuna []models.InfoComplementariaTercero
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?query=tercero_id:"+idQr+",InfoComplementariaId.GrupoInfoComplementariaId.CodigoAbreviacion:V&order=asc&sortby=InfoComplementariaId", &respuesta_peticion_vacuna); (err == nil) && (response == 200) {
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"/info_complementaria_tercero/?query=tercero_id:"+idQr+",InfoComplementariaId.GrupoInfoComplementariaId.CodigoAbreviacion:V&order=asc&sortby=InfoComplementariaId", &respuesta_peticion_vacuna); (err == nil) && (response == 200) {
 		if respuesta_peticion_vacuna[0].Id != 0 {
 			layout := "2006-01-02T15:04:05.000Z"
 			var dato map[string]interface{}
@@ -557,8 +557,8 @@ func ConsultarVacuna(idQr string) (vacuna bool, msg string, outputError map[stri
 func ConsultarEspacio(idEspacio string) (espacioFisico models.EspacioFisico, outputError map[string]interface{}) {
 	logs.Error("ingreso a ConsultarEspacio")
 	var list []models.EspacioFisico
-	logs.Error(beego.AppConfig.String("UrlCrudOikos") + "espacio_fisico/?limit=1&query=Id:" + idEspacio)
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"espacio_fisico/?limit=1&query=Id:"+idEspacio, &list); (err != nil) || (response != 200) {
+	logs.Error(beego.AppConfig.String("UrlCrudOikos") + "/espacio_fisico/?limit=1&query=Id:" + idEspacio)
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudOikos")+"/espacio_fisico/?limit=1&query=Id:"+idEspacio, &list); (err != nil) || (response != 200) {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/ConsultaEspacio", "err": err, "status": "502"}
 		return models.EspacioFisico{}, outputError
@@ -570,7 +570,7 @@ func ConsultarEspacio(idEspacio string) (espacioFisico models.EspacioFisico, out
 func ConsultarComorbilidades(idQr string) (comorbilidad bool, outputError map[string]interface{}) {
 	var respuesta_peticion_comorbilidades []models.InfoComplementariaTercero
 	var dato map[string]interface{}
-	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"info_complementaria_tercero/?limit=-1&query=tercero_id:"+idQr+",InfoComplementariaId.GrupoInfoComplementariaId.Id:47", &respuesta_peticion_comorbilidades); (err == nil) && (response == 200) {
+	if response, err := getJsonTest(beego.AppConfig.String("UrlCrudTerceros")+"/info_complementaria_tercero/?limit=-1&query=tercero_id:"+idQr+",InfoComplementariaId.GrupoInfoComplementariaId.Id:47", &respuesta_peticion_comorbilidades); (err == nil) && (response == 200) {
 		if respuesta_peticion_comorbilidades[0].Id != 0 {
 			for _, info := range respuesta_peticion_comorbilidades {
 				json.Unmarshal([]byte(info.Dato), &dato)
@@ -620,8 +620,8 @@ func registrarFlujo(idTercero string, espacio models.EspacioFisico, tipo string)
 
 	var res map[string]interface{}
 	logs.Error("body: ", body)
-	logs.Error(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento", body)
-	if err := SendJson(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento", "POST", &res, body); err != nil {
+	logs.Error(beego.AppConfig.String("UrlCrudSeguimiento")+"/seguimiento", body)
+	if err := SendJson(beego.AppConfig.String("UrlCrudSeguimiento")+"/seguimiento", "POST", &res, body); err != nil {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/registrarFlujo/PostSeguimiento", "resStatus": res["status"], "err": err, "status": "502"}
 		return outputError
@@ -634,8 +634,8 @@ func validarFlujo(idTercero string, espacio models.EspacioFisico, tipo string) (
 	//get del nuevo api que traiga el último registro del tipo de espacio
 	var res map[string]interface{}
 	var seguimiento []models.RegistroTraza
-	logs.Error(beego.AppConfig.String("UrlCrudSeguimiento") + "seguimiento/?limit=1&query=tercero_id:" + idTercero + "&order=desc&sortby=fecha_creacion")
-	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"seguimiento/?limit=1&query=tercero_id:"+idTercero+"&order=desc&sortby=fecha_creacion", &res); status != 200 || err != nil {
+	logs.Error(beego.AppConfig.String("UrlCrudSeguimiento") + "/seguimiento/?limit=1&query=tercero_id:" + idTercero + "&order=desc&sortby=fecha_creacion")
+	if status, err := getJsonTest(beego.AppConfig.String("UrlCrudSeguimiento")+"/seguimiento/?limit=1&query=tercero_id:"+idTercero+"&order=desc&sortby=fecha_creacion", &res); status != 200 || err != nil {
 		logs.Error(err)
 		outputError = map[string]interface{}{"funcion": "/ValidarFlujo/GetSeguimiento", "err": err, "responseStatus": status, "status": "502"}
 		return false, outputError
