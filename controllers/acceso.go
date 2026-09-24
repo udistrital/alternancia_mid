@@ -38,7 +38,7 @@ func (c *AccesoController) GetAutorizacion() {
 	sede := c.GetString("sede")
 	edificio := c.GetString("edificio")
 	aula := c.GetString("aula")
-
+	logs.Error("ingreso a GetAutorizacion")
 	defer func() {
 		if err := recover(); err != nil {
 			logs.Error(err)
@@ -98,7 +98,7 @@ func (c *AccesoController) GetIngreso() {
 	idPersona := c.GetString(":idPersona")
 	idEspacio := c.GetString(":idEspacio")
 	tipoQr := c.GetString(":tipoQR")
-
+	logs.Error("ingreso a GetIngreso")
 	defer func() {
 		if err := recover(); err != nil {
 			logs.Error(err)
